@@ -18,7 +18,7 @@ library(shinythemes)
 library(shinydashboard)
 
 
-source("covid_interactive_mod.r", local = TRUE) 
+source("covid_interactive_mod.R", local = TRUE) 
 
 ui <- shinyUI(
   fluidPage(theme=shinytheme('spacelab'),

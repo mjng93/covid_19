@@ -1,6 +1,6 @@
 
 
-source("covid.R")
+source("covid.r")
 
 library(shiny)
 library(ggplot2)
@@ -39,7 +39,7 @@ sandbox.UI <- function(id) {
                                  ),
                                  radioButtons(ns("radio"),
                                               label = "Select Data Transformation", 
-                                              choices = c("Levels" = "levels", "Log Levels" = "log", "Change (Daily)" = "diff", "Percent Change (Daily)" = "qoq", "Percent Change (10-day)" = "mom","Average Daily Percent Change (Rolling, 7-days)"="chg.avg"),
+                                              choices = c("Levels" = "levels", "Log Levels" = "log", "Change (Daily)" = "diff", "Percent Change (Daily)" = "qoq","Average Daily Percent Change (Rolling, 7-days)"="chg.avg"), #"Percent Change (10-day)" = "mom"
                                               selected = "levels"),
                                  
                                  selectInput(ns('xchoice'),
@@ -160,13 +160,15 @@ sandbox.server <- function(input, output, session,data,data2){
       module_data.mom=as.data.frame(group_by(module_data.mom,Country.Region) %>% mutate(test=as.numeric(as.vector(Delt(get(input$ystat),k=7)))*100))
       
       module_data.mom[,input$ystat]=module_data.mom[,c("test")]
-      module_data.mom=subset(module_data.mom,select=-c(test))
+      module_data.mom$test=NULL
       
       df <- melt(module_data.mom,id.vars=c(input$xchoice,"Country.Region"))
       df <- df[df$Country.Region %in% input$name,]
       colnames(df)=c("xval","Country.Region","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
+      print(tail(df))
+      
       units="Percent Change"
     }
     

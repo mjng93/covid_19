@@ -21,8 +21,8 @@ covid$since_case_100=covid$ObservationDate-covid$start.c.100
 covid$since_death_10=covid$ObservationDate-covid$start.d.10
 
 covid$ObservationDate=as.Date(covid$ObservationDate)
-#top countries are those with over 500 cases
-covid.top=subset(covid,Confirmed>500)
+#top countries are those with over 50 cases
+covid.top=subset(covid,Confirmed>50)
 top.countries=unique(covid.top$Province.State)
 covid=arrange(covid,ObservationDate)
 
@@ -34,9 +34,9 @@ us$ObservationDate=as.Date(us$ObservationDate)
 
 covid.agg=as.data.frame(group_by(covid,ObservationDate, Country.Region) %>% summarise(confirmed = sum(Confirmed),deaths=sum(Deaths),Recovered=sum(Recovered)))
 
-covid.agg=merge(covid.agg,as.data.frame(group_by(covid.agg, Country.Region) %>% summarise(start=min(ObservationDate))),by=c("Country.Region"),all=FALSE) #add date of first case
-covid.agg=merge(covid.agg,as.data.frame(group_by(covid.agg, Country.Region) %>% filter(confirmed>=100) %>% summarise(start.c.100=min(ObservationDate))),by="Country.Region",all=FALSE) # add date of 100th case
-covid.agg=merge(covid.agg,as.data.frame(group_by(covid.agg, Country.Region) %>% filter(deaths>=10) %>% summarise(start.d.10=min(ObservationDate))),by="Country.Region",all=FALSE) #add date of 10th death
+covid.agg=merge(covid.agg,as.data.frame(group_by(covid.agg, Country.Region) %>% summarise(start=min(ObservationDate))),by=c("Country.Region"),all=TRUE) #add date of first case
+covid.agg=merge(covid.agg,as.data.frame(group_by(covid.agg, Country.Region) %>% filter(confirmed>=100) %>% summarise(start.c.100=min(ObservationDate))),by="Country.Region",all=TRUE) # add date of 100th case
+covid.agg=merge(covid.agg,as.data.frame(group_by(covid.agg, Country.Region) %>% filter(deaths>=10) %>% summarise(start.d.10=min(ObservationDate))),by="Country.Region",all=TRUE) #add date of 10th death
 
 covid.agg$since_start=covid.agg$ObservationDate-covid.agg$start
 covid.agg$since_case_100=covid.agg$ObservationDate-covid.agg$start.c.100
@@ -44,7 +44,7 @@ covid.agg$since_death_10=covid.agg$ObservationDate-covid.agg$start.d.10
 
 covid.agg$ObservationDate=as.Date(covid.agg$ObservationDate)
 #top countries are those with over 500 cases
-covid.agg.top=subset(covid.agg,confirmed>500)
+covid.agg.top=subset(covid.agg,confirmed>50)
 top.countries=unique(covid.agg.top$Country.Region)
 covid.agg=arrange(covid.agg,ObservationDate)
 
@@ -77,6 +77,3 @@ covid.agg.confirmed.log=dcast(covid.agg,since_case_100~Country.Region,value.var=
 
 colnames(covid.agg)=c("Country.Region","Date","Confirmed Cases","Deaths","Recovered Cases","start"      ,"start.c.100","start.d.10","Since 1st Case","Since 100th Case","Since 10th Death","confirmed.log","deaths.log","Recovered.log")
 
-write.csv(covid.agg.confirmed,"C:/Users/micha/Dropbox/Files/Projects/covid_19/covid_19_confirmed.csv",row.names = FALSE,na="")
-
-#write.csv(covid.agg.confirmed.log,"C:/Users/micha/Dropbox/Files/Projects/covid_19/covid_19_confirmed_log.csv",row.names = FALSE,na="")
