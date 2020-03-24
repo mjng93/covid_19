@@ -19,14 +19,18 @@ library(shinydashboard)
 
 
 source("covid_interactive_mod.R", local = TRUE) 
+source("covid_interactive_state_mod.R", local = TRUE) 
 
 ui <- shinyUI(
   fluidPage(theme=shinytheme('spacelab'),
             
             
             navbarPage("Covid-19",
-                       navbarMenu("Research",
+                       navbarMenu("Country Level Data",
                                   sandbox.UI(id="sandbox")
+                       ),
+                       navbarMenu("State/Province Level Data",
+                                  sandbox2.UI(id="sandbox2")
                        )
             )
   )
@@ -36,6 +40,7 @@ ui <- shinyUI(
 server <- function(input, output, session){
   
   callModule(sandbox.server,id="sandbox",data=covid.agg)
+  callModule(sandbox.server2,id="sandbox2",data2=covid)
   
 }
 

@@ -27,7 +27,7 @@ sandbox.UI <- function(id) {
   
   ns <- NS(id)
   
-  tabPanel("Data Sandbox",
+  tabPanel("Country Data",
            #customHeader(title = "Data 'Sandbox' Manipulator"),
            column(12,
                   sidebarLayout(
@@ -40,17 +40,17 @@ sandbox.UI <- function(id) {
                                  radioButtons(ns("radio"),
                                               label = "Select Data Transformation", 
                                               choices = c("Levels" = "levels", "Log Levels" = "log", "Change (Daily)" = "diff", "Percent Change (Daily)" = "qoq","Average Daily Percent Change (Rolling, 7-days)"="chg.avg"), #"Percent Change (10-day)" = "mom"
-                                              selected = "levels"),
+                                              selected = "log"),
                                  
                                  selectInput(ns('xchoice'),
                                              label = 'Select time horizon',
                                              choices=c("Date","Since 1st Case","Since 100th Case","Since 10th Death"),
-                                             selected="Date"
+                                             selected="Since 10th Death"
                                  ),
                                  selectInput(ns("name"),
                                              label = "Select country:",
                                              choices = c(unique(covid.agg$Country.Region)),
-                                             selected = c("US"),
+                                             selected = c("US","Italy","Mainland China","South Korea"),
                                              multiple = TRUE
                                  ),
                                  
@@ -84,12 +84,15 @@ sandbox.UI <- function(id) {
            )
            
   )
+
+  
+  
 }
 
 
 
 
-sandbox.server <- function(input, output, session,data,data2){
+sandbox.server <- function(input, output, session,data){
   
   module_data=data
   
@@ -286,6 +289,7 @@ sandbox.server <- function(input, output, session,data,data2){
     }
   )
   
+
  
  
   
