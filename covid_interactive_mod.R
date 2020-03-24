@@ -39,7 +39,7 @@ sandbox.UI <- function(id) {
                                  ),
                                  radioButtons(ns("radio"),
                                               label = "Select Data Transformation", 
-                                              choices = c("Levels" = "levels", "Log Levels" = "log", "Change (Daily)" = "diff", "Percent Change (Daily)" = "qoq","Average Daily Percent Change (Rolling, 7-days)"="chg.avg"), #"Percent Change (10-day)" = "mom"
+                                              choices = c("Levels" = "levels","Per Capita Levels" = "pc", "Log Levels" = "log", "Change (Daily)" = "diff", "Percent Change (Daily)" = "qoq","Average Daily Percent Change (Rolling, 7-days)"="chg.avg"), #"Percent Change (10-day)" = "mom"
                                               selected = "log"),
                                  
                                  selectInput(ns('xchoice'),
@@ -75,7 +75,10 @@ sandbox.UI <- function(id) {
                     span(a("Kaggle",href="https://www.kaggle.com/sudalairajkumar/novel-corona-virus-2019-dataset")),
                     ". All data is aggregated by Country/Region. Also inspired by the Financial Times ",
                     span(a("dataviz",href="https://www.ft.com/coronavirus-latest")),
-                    " on Covid-19.","Data is currently updated through",
+                    " on Covid-19.",
+                    "Population data is sourced from the ",
+                    span(a("World Bank",href="https://data.worldbank.org/indicator/sp.pop.totl")),
+                    ". Data is currently updated through",
                     span(as.character(format(as.Date(max(covid.agg$Date,na.rm=T)),"%B %d, %Y"))),".")
                     
                     )
@@ -105,6 +108,30 @@ sandbox.server <- function(input, output, session,data){
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
       units="Levels"
+    }
+    
+    if (input$radio=="pc"){
+      module_data.pc=module_data[,c("Country.Region","Population",input$xchoice,input$ystat)]
+      module_data.pc[,input$ystat]=(module_data.pc[,input$ystat]/module_data.pc[,"Population"])*100
+      module_data.pc$Population=NULL
+      df <- melt(module_data.pc,id.vars=c(input$xchoice,"Country.Region"))
+      df <- df[df$Country.Region %in% input$name,]
+      colnames(df)=c("xval","Country.Region","variable","value")
+      df$value <- as.numeric(gsub(Inf,NA,df$value))
+      df$value <- as.numeric(gsub(-Inf,NA,df$value))
+      units="Percent"
+    }
+    
+    if (input$radio=="log.pc"){
+      module_data.log.pc=module_data[,c("Country.Region","Population",input$xchoice,input$ystat)]
+      module_data.log.pc[,input$ystat]=log(1+(module_data.log.pc[,input$ystat]/module_data.log.pc[,"Population"])*100)
+      module_data.log.pc$Population=NULL
+      df <- melt(module_data.log.pc,id.vars=c(input$xchoice,"Country.Region"))
+      df <- df[df$Country.Region %in% input$name,]
+      colnames(df)=c("xval","Country.Region","variable","value")
+      df$value <- as.numeric(gsub(Inf,NA,df$value))
+      df$value <- as.numeric(gsub(-Inf,NA,df$value))
+      units="Percent"
     }
     
     if (input$radio=="log"){
@@ -200,6 +227,18 @@ sandbox.server <- function(input, output, session,data){
     
   })
   
+  unit_input <- reactive({
+    if (input$radio=="levels"){units="Total Cumulative"}
+    if (input$radio=="pc"){units="Percent (1=1%)"}
+    if (input$radio=="log.pc"){units="Log Points: computed as log(1 + Per Capita Level in decimals)"}
+    if (input$radio=="log"){units="Log Points"}
+    if (input$radio=="diff"){units="New Cases"}
+    if (input$radio=="qoq"){units="Percent Change (1=1%)"}
+    if (input$radio=="chg.avg"){units="Average Daily Percent Change (1=1%)"}
+    
+    units
+    
+  })
   
   output$plot <- renderPlotly({
     
@@ -217,7 +256,7 @@ sandbox.server <- function(input, output, session,data){
     plot_ly(plot.data, x = ~xval,y= ~value, color = ~Country.Region, type = 'scatter', mode = 'lines') %>%
       layout(title = "Covid Data",
              xaxis = list(title = "Days"),
-             yaxis = list (title = units))
+             yaxis = list (title = unit_input()))
     
     
     #,text = paste('Value:', value,'<br>Date: ', as.Date(date,format='%b-%Y'),  '<br>Variable: ', variable)

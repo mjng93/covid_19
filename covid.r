@@ -8,11 +8,15 @@ library(zoo)
 
 #covid data comes from Johns Hopkins University; sourced from Kaggle
 covid <- read.csv("covid_19_data.csv",stringsAsFactors = FALSE) 
+pop.match <- read.csv("world_bank_pop_match.csv",stringsAsFactors = FALSE) 
+pop <- read.csv("wb_population.csv",stringsAsFactors = FALSE) 
+pop=merge(pop,pop.match,by="WB.Country.Region",all=FALSE)
+covid=merge(covid,pop,by="Country.Region",all=FALSE)
 covid$ObservationDate=as.Date(covid$ObservationDate,format="%m/%d/%Y")
 
 colors=rainbow(15, alpha = 1, rev = FALSE)
 
-covid=as.data.frame(group_by(covid,ObservationDate,Province.State,Country.Region,Last.Update) %>% summarise(Confirmed = sum(Confirmed),Deaths=sum(Deaths),Recovered=sum(Recovered)))
+covid=as.data.frame(group_by(covid,ObservationDate,Province.State,Country.Region,Last.Update) %>% summarise(Confirmed = sum(Confirmed),Deaths=sum(Deaths),Recovered=sum(Recovered),population=max(population)))
 covid=merge(covid,as.data.frame(group_by(covid, Province.State) %>% summarise(start=min(ObservationDate))),by=c("Province.State"),all=FALSE) #add date of first case
 covid=merge(covid,as.data.frame(group_by(covid, Province.State) %>% filter(Confirmed>=100) %>% summarise(start.c.100=min(ObservationDate))),by="Province.State",all=TRUE) # add date of 100th case
 covid=merge(covid,as.data.frame(group_by(covid, Province.State) %>% filter(Deaths>=10) %>% summarise(start.d.10=min(ObservationDate))),by="Province.State",all=TRUE) #add date of 10th death
@@ -33,15 +37,18 @@ us.all=subset(covid,Country.Region=="US")
 us=as.data.frame(group_by(us.all,ObservationDate, Country.Region) %>% summarise(confirmed = sum(Confirmed),deaths=sum(Deaths),Recovered=sum(Recovered)))
 us$ObservationDate=as.Date(us$ObservationDate)
 
-covid.agg=as.data.frame(group_by(covid,ObservationDate, Country.Region) %>% summarise(confirmed = sum(Confirmed),deaths=sum(Deaths),Recovered=sum(Recovered)))
+covid.agg=as.data.frame(group_by(covid,ObservationDate, Country.Region) %>% summarise(confirmed = sum(Confirmed),deaths=sum(Deaths),Recovered=sum(Recovered),Population=max(population)))
 
 covid.agg=merge(covid.agg,as.data.frame(group_by(covid.agg, Country.Region) %>% summarise(start=min(ObservationDate))),by=c("Country.Region"),all=TRUE) #add date of first case
 covid.agg=merge(covid.agg,as.data.frame(group_by(covid.agg, Country.Region) %>% filter(confirmed>=100) %>% summarise(start.c.100=min(ObservationDate))),by="Country.Region",all=TRUE) # add date of 100th case
 covid.agg=merge(covid.agg,as.data.frame(group_by(covid.agg, Country.Region) %>% filter(deaths>=10) %>% summarise(start.d.10=min(ObservationDate))),by="Country.Region",all=TRUE) #add date of 10th death
+#covid.agg=as.data.frame(group_by(covid.agg, Country.Region) %>% mutate(confirmed.pc=confirmed/population),deaths.pc=deaths/population))
 
 covid.agg$since_start=covid.agg$ObservationDate-covid.agg$start
 covid.agg$since_case_100=covid.agg$ObservationDate-covid.agg$start.c.100
 covid.agg$since_death_10=covid.agg$ObservationDate-covid.agg$start.d.10
+
+
 
 covid.agg$ObservationDate=as.Date(covid.agg$ObservationDate)
 #top countries are those with over 500 cases
@@ -76,12 +83,12 @@ for (i in (2:length(top.countries))){
 covid.agg.confirmed=dcast(covid.agg,since_case_100~Country.Region,value.var="confirmed")
 covid.agg.confirmed.log=dcast(covid.agg,since_case_100~Country.Region,value.var="confirmed.log")
 
-colnames(covid.agg)=c("Country.Region","Date","Confirmed Cases","Deaths","Recovered Cases","start"      ,"start.c.100","start.d.10","Since 1st Case","Since 100th Case","Since 10th Death","confirmed.log","deaths.log","Recovered.log")
+colnames(covid.agg)=c("Country.Region","Date","Confirmed Cases","Deaths","Recovered Cases","Population","start"      ,"start.c.100","start.d.10","Since 1st Case","Since 100th Case","Since 10th Death","confirmed.log","deaths.log","Recovered.log")
 
 
 covid=as.data.frame(group_by(covid, Province.State) %>% mutate(case.max=max(Confirmed,na.rm=T))) # find max number of cases per country
 
-colnames(covid)=c("Province.State","Date","Country.Region","Last.Update","Confirmed Cases","Deaths","Recovered Cases","start","start.c.100","start.d.10","Since 1st Case","Since 100th Case","Since 10th Death","Case_Max")
+colnames(covid)=c("Province.State","Date","Country.Region","Last.Update","Confirmed Cases","Deaths","Recovered Cases","Population","start","start.c.100","start.d.10","Since 1st Case","Since 100th Case","Since 10th Death","Case_Max")
 covid=subset(covid,Case_Max>=50) #limit states to those with at least 50 cases (~20th percentile)
 covid$Case_Max=NULL
 
