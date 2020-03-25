@@ -6,7 +6,6 @@ library(RColorBrewer)
 library(reshape2)
 library(zoo)
 
-setwd("C:/Users/micha/Dropbox/Files/Projects/covid_19/covid_19")
 
 #covid data comes from Johns Hopkins University; sourced from Kaggle
 covid <- read.csv("covid_19_data.csv",stringsAsFactors = FALSE) 
