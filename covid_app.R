@@ -26,6 +26,9 @@ ui <- shinyUI(
   fluidPage(theme=shinytheme('spacelab'),
             
             
+            tags$head(includeScript("google_analytics_covid1.js")),
+            
+            
             navbarPage("Covid-19",
                        navbarMenu("Country Level Data",
                                   sandbox.UI(id="sandbox")
