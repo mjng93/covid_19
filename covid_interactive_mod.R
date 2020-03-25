@@ -32,6 +32,10 @@ sandbox.UI <- function(id) {
            column(12,
                   sidebarLayout(
                     sidebarPanel(h3("COVID-19 Data"),
+                                 radioButtons(ns("chart_type"),
+                                              label = "Select Chart Type", 
+                                              choices = c("Bar Chart" = "bar","Line Chart"="line"),
+                                              selected = "line"),
                                  selectInput(ns('ystat'),
                                              label = 'Select statistic',
                                              choices=c("Confirmed Cases","Deaths","Recovered Cases"),
@@ -242,22 +246,24 @@ sandbox.server <- function(input, output, session,data){
   
   output$plot <- renderPlotly({
     
-    # plot <-   ggplot(data_input()) +              
-    #   geom_line(aes(x = input$xchoice, y = value, colour = Country.Region)) + scale_colour_discrete(name = NULL) + labs(x = NULL, y = input$radio, title = "COVID Data",cap=c()   + theme(legend.position = "bottom", legend.margin = margin(t = -.1, unit='cm')) + theme(panel.grid.minor.x=element_blank(), panel.grid.major.x=element_blank()) + theme(plot.margin=unit(c(.1,.1,.1,.1),"cm"))
-    # 
-    # print(plot)
-    
     plot.data=data_input()
     if (min(plot.data$xval,na.rm=T)<0){
       plot.data=plot.data[plot.data$xval>=-1,]
     }
     
-    
+    if (input$chart_type=="line"){
     plot_ly(plot.data, x = ~xval,y= ~value, color = ~Country.Region, type = 'scatter', mode = 'lines') %>%
-      layout(title = "Covid Data",
+      layout(title = input$ystat,
              xaxis = list(title = "Days"),
              yaxis = list (title = unit_input()))
+    }
     
+    else if (input$chart_type=="bar"){
+      plot_ly(plot.data, x = ~xval,y= ~value, color = ~Country.Region, type = 'bar') %>%
+        layout(title = input$ystat,
+               xaxis = list(title = "Days"),
+               yaxis = list (title = unit_input()))
+    }
     
     #,text = paste('Value:', value,'<br>Date: ', as.Date(date,format='%b-%Y'),  '<br>Variable: ', variable)
     
@@ -320,7 +326,7 @@ sandbox.server <- function(input, output, session,data){
   
   output$CovidData <- downloadHandler(
     filename = function() {
-      paste('stats', 'csv', sep='.')
+      paste('covid_data', 'csv', sep='.')
     },
     content = function(file) {
       

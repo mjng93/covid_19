@@ -36,6 +36,10 @@ sandbox2.UI <- function(id) {
            column(12,
                   sidebarLayout(
                     sidebarPanel(h3("COVID-19 Data"),
+                                 radioButtons(ns("chart_type"),
+                                              label = "Select Chart Type", 
+                                              choices = c("Bar Chart" = "bar","Line Chart"="line"),
+                                              selected = "line"),
                                  selectInput(ns('ystat2'),
                                              label = 'Select statistic',
                                              choices=c("Confirmed Cases","Deaths","Recovered Cases"),
@@ -221,11 +225,19 @@ sandbox.server2 <- function(input, output, session,data2){
       plot.data2=plot.data2[plot.data2$xval>=-1,]
     }
     
-    
+    if (input$chart_type=="line"){
     plot_ly(plot.data2, x = ~xval,y= ~value, color = ~Province.State, type = 'scatter', mode = 'lines') %>%
-      layout(title = "Covid Data",
+      layout(title = input$ystat,
              xaxis = list(title = "Days"),
              yaxis = list (title = units))
+    }
+    
+    else if (input$chart_type=="bar"){
+      plot_ly(plot.data2, x = ~xval,y= ~value, color = ~Province.State, type = 'bar') %>%
+        layout(title = input$ystat,
+               xaxis = list(title = "Days"),
+               yaxis = list (title = units))
+    }
     
     
     #,text = paste('Value:', value,'<br>Date: ', as.Date(date,format='%b-%Y'),  '<br>Variable: ', variable)
@@ -288,7 +300,7 @@ sandbox.server2 <- function(input, output, session,data2){
   
   output$CovidData.state <- downloadHandler(
     filename = function() {
-      paste('CovidData_state', 'csv', sep='.')
+      paste('covid_data_state', 'csv', sep='.')
     },
     content = function(file) {
       

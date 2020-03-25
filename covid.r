@@ -6,17 +6,22 @@ library(RColorBrewer)
 library(reshape2)
 library(zoo)
 
+setwd("C:/Users/micha/Dropbox/Files/Projects/covid_19/covid_19")
+
 #covid data comes from Johns Hopkins University; sourced from Kaggle
 covid <- read.csv("covid_19_data.csv",stringsAsFactors = FALSE) 
 pop.match <- read.csv("world_bank_pop_match.csv",stringsAsFactors = FALSE) 
 pop <- read.csv("wb_population.csv",stringsAsFactors = FALSE) 
 pop=merge(pop,pop.match,by="WB.Country.Region",all=FALSE)
 covid=merge(covid,pop,by="Country.Region",all=FALSE)
+state.pop=read.csv("state_pop_match.csv",stringsAsFactors = FALSE) 
 covid$ObservationDate=as.Date(covid$ObservationDate,format="%m/%d/%Y")
+
+covid.state=covid
 
 colors=rainbow(15, alpha = 1, rev = FALSE)
 
-covid=as.data.frame(group_by(covid,ObservationDate,Province.State,Country.Region,Last.Update) %>% summarise(Confirmed = sum(Confirmed),Deaths=sum(Deaths),Recovered=sum(Recovered),population=max(population)))
+covid=as.data.frame(group_by(covid,ObservationDate,Province.State,Country.Region,Last.Update) %>% summarise(Confirmed = sum(Confirmed),Deaths=sum(Deaths),Recovered=sum(Recovered),population=max(population)))#,state_population=max(state_population,na.rm=T)
 covid=merge(covid,as.data.frame(group_by(covid, Province.State) %>% summarise(start=min(ObservationDate))),by=c("Province.State"),all=FALSE) #add date of first case
 covid=merge(covid,as.data.frame(group_by(covid, Province.State) %>% filter(Confirmed>=100) %>% summarise(start.c.100=min(ObservationDate))),by="Province.State",all=TRUE) # add date of 100th case
 covid=merge(covid,as.data.frame(group_by(covid, Province.State) %>% filter(Deaths>=10) %>% summarise(start.d.10=min(ObservationDate))),by="Province.State",all=TRUE) #add date of 10th death
@@ -92,3 +97,15 @@ colnames(covid)=c("Province.State","Date","Country.Region","Last.Update","Confir
 covid=subset(covid,Case_Max>=50) #limit states to those with at least 50 cases (~20th percentile)
 covid$Case_Max=NULL
 
+
+#Add data on testing and hospitalizations
+
+covid.state=merge(covid[covid$Country.Region=="US",],state.pop,by="Province.State",all.x=TRUE)
+tests <- read.csv("states-daily.csv",stringsAsFactors = FALSE) 
+tests$date=as.Date(as.character(tests$date),format="%Y%m%d")
+colnames(tests)[c(1,2)]=c("Date","state_ab")
+covid.state=merge(covid.state,tests,by=c("Date","state_ab"),all.x=TRUE)
+colnames(covid.state)=c("Date","state_ab","Province.State","Country.Region","Last.Update","Confirmed Cases","Deaths (JHU count)","Recovered Cases","Population","start","start.c.100","start.d.10","Since 1st Case","Since 100th Case","Since 10th Death","state","state_population","Positive Tests","Negative Tests","Pending Tests","Hospitalized Cases","Deaths","Total Tests","dateChecked")
+
+
+#covid.state=merge(covid.state,tests,by="")
