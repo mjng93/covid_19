@@ -7,11 +7,14 @@ library(reshape2)
 library(zoo)
 
 
+
 #covid data comes directly from Johns Hopkins University github page
 
 confirmed <-read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv")
 deaths = read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv")
 recovered = read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv")
+
+print("New Counry-level JHU data loaded from Github")
 
 confirmed=melt(subset(confirmed,select=-c(Lat,Long)),id.vars=c("Province.State","Country.Region"))
 confirmed$variable=as.Date(gsub("X","",confirmed$variable),format="%m.%d.%y")
@@ -110,7 +113,7 @@ covid.kaggle$Country.Region=gsub("UK","United Kingdom",covid.kaggle$Country.Regi
 
 
 #read in any new data from Hopkins Github page directly (state-level data uploaded seperately for each date - choose to download new data if today is a day or later than the most recent data we have stored) : Note that code is not robust yet to fill in multiple missing days of data, only the most recent day's data - will add loop eventually
-if ((Sys.Date()-max(covid.kaggle$ObservationDate))>=1){
+if ((Sys.Date()-max(covid.kaggle$ObservationDate))>1){
 print('Getting new state-level data')
 new_state_data <-read.csv(paste0(paste0("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/",as.character(format(Sys.Date()-1,"%m-%d-%Y"))),".csv"))
 print("downloaded new state-level data")
