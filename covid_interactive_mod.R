@@ -83,7 +83,9 @@ sandbox.UI <- function(id) {
                     "Population data is sourced from the ",
                     span(a("World Bank",href="https://data.worldbank.org/indicator/sp.pop.totl")),
                     ". Data is currently updated through",
-                    span(as.character(format(as.Date(max(covid.agg$Date,na.rm=T)),"%B %d, %Y"))),".")
+                    span(as.character(format(as.Date(max(covid.agg$Date,na.rm=T)),"%B %d, %Y"))),". All code written by Michael Ng, available on",
+                    span(a("Github",href="https://github.com/mjng93/covid_19")),"."
+                    )
                     
                     )
                     

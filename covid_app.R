@@ -23,7 +23,7 @@ source("covid_interactive_state_mod.R", local = TRUE)
 source("covid_interactive_tests_mod.R", local = TRUE) 
 
 ui <- shinyUI(
-  fluidPage(theme=shinytheme('spacelab'),
+  fluidPage(theme=shinytheme('yeti'),
             
             
             tags$head(includeScript("google_analytics_covid1.js")),

@@ -80,7 +80,9 @@ sandbox3.UI <- function(id) {
                         "State population data is sourced from the ",
                         span(a("Census Bureu",href="https://www.census.gov/data/tables/time-series/demo/popest/2010s-state-total.html")),
                         ". Note that these data may not match with data from Johns Hopkins exactly, as they may be collected from different sources. Data is currently updated through",
-                        span(as.character(format(as.Date(max(covid.state$Date,na.rm=T)),"%B %d, %Y"))),".")
+                        span(as.character(format(as.Date(max(covid.state$Date,na.rm=T)),"%B %d, %Y"))),"All code written by Michael Ng, available on",
+                    span(a("Github",href="https://github.com/mjng93/covid_19")),"."
+                        )
                       
                     )
                     

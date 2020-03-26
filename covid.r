@@ -6,6 +6,7 @@ library(RColorBrewer)
 library(reshape2)
 library(zoo)
 
+setwd("C:/Users/micha/Dropbox/Files/Projects/covid_19/covid_19")
 
 
 #covid data comes directly from Johns Hopkins University github page
@@ -153,7 +154,8 @@ covid.kaggle$Case_Max=NULL
 
 state.pop=read.csv("state_pop_match.csv",stringsAsFactors = FALSE) 
 covid.state=merge(covid.kaggle[covid.kaggle$Country.Region=="US",],state.pop,by="Province.State",all=TRUE)
-tests <- read.csv("states-daily.csv",stringsAsFactors = FALSE) 
+#tests <- read.csv("states-daily.csv",stringsAsFactors = FALSE) 
+tests=read.csv("https://covidtracking.com/api/states/daily.csv")
 tests$date=as.Date(as.character(tests$date),format="%Y%m%d")
 colnames(tests)[c(1,2)]=c("Date","state_ab")
 covid.state=merge(covid.state,tests,by=c("Date","state_ab"),all.y=TRUE)

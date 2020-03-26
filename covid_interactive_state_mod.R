@@ -79,12 +79,13 @@ sandbox2.UI <- function(id) {
                       
                       p("Data is sourced from Johns Hopkins Univerity CSSE as posted on",
                         span(a("Github",href="https://github.com/CSSEGISandData/COVID-19")),
-                        # "and provided online through",
-                        # span(a("Kaggle",href="https://www.kaggle.com/sudalairajkumar/novel-corona-virus-2019-dataset")),
+                        "and provided online through",
+                        span(a("Kaggle",href="https://www.kaggle.com/sudalairajkumar/novel-corona-virus-2019-dataset")),
                         ". Also inspired by the Financial Times ",
                         span(a("dataviz",href="https://www.ft.com/coronavirus-latest")),
                         " on Covid-19.","Data is currently updated through",
-                        span(as.character(format(as.Date(max(covid.kaggle$Date,na.rm=T)),"%B %d, %Y"))),".")
+                        span(as.character(format(as.Date(max(covid.kaggle$Date,na.rm=T)),"%B %d, %Y"))),"All code written by Michael Ng, available on",
+                    span(a("Github",href="https://github.com/mjng93/covid_19")),".")
                       
                     )
                     
