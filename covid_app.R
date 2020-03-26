@@ -47,7 +47,7 @@ ui <- shinyUI(
 server <- function(input, output, session){
   
   callModule(sandbox.server,id="sandbox",data=covid.agg)
-  callModule(sandbox.server2,id="sandbox2",data2=covid)
+  callModule(sandbox.server2,id="sandbox2",data2=covid.kaggle)
   callModule(sandbox.server3,id="sandbox3",data3=covid.state)
   
 }

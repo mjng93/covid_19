@@ -39,7 +39,7 @@ sandbox.UI <- function(id) {
                                  selectInput(ns('ystat'),
                                              label = 'Select statistic',
                                              choices=c("Confirmed Cases","Deaths","Recovered Cases"),
-                                             selected="deaths"
+                                             selected="Deaths"
                                  ),
                                  radioButtons(ns("radio"),
                                               label = "Select Data Transformation", 
@@ -54,7 +54,7 @@ sandbox.UI <- function(id) {
                                  selectInput(ns("name"),
                                              label = "Select country:",
                                              choices = c(unique(covid.agg$Country.Region)),
-                                             selected = c("US","Italy","Mainland China","South Korea"),
+                                             selected = c("US","Italy","China","Korea, South"),
                                              multiple = TRUE
                                  ),
                                  
@@ -75,8 +75,8 @@ sandbox.UI <- function(id) {
                     
                     p("Data is sourced from Johns Hopkins Univerity CSSE as posted on",
                     span(a("Github",href="https://github.com/CSSEGISandData/COVID-19")),
-                    "and provided online through",
-                    span(a("Kaggle",href="https://www.kaggle.com/sudalairajkumar/novel-corona-virus-2019-dataset")),
+                    # "and provided online through",
+                    # span(a("Kaggle",href="https://www.kaggle.com/sudalairajkumar/novel-corona-virus-2019-dataset")),
                     ". All data is aggregated by Country/Region. Also inspired by the Financial Times ",
                     span(a("dataviz",href="https://www.ft.com/coronavirus-latest")),
                     " on Covid-19.",
