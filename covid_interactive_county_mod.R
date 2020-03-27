@@ -118,11 +118,11 @@ sandbox.server4 <- function(input, output, session,data4){
   
   data_input_county <- reactive({
     if (input$radio=="levels"){
-      module_data.levels=module_data[,c("state","county",input$xchoice,input$ystat)]
-      df <- melt(module_data.levels,id.vars=c(input$xchoice,"state","county"))
+      module_data.levels=module_data[,c("state","county","county.state",input$xchoice,input$ystat)]
+      df <- melt(module_data.levels,id.vars=c(input$xchoice,"state","county","county.state"))
       df <- df[df$state %in% input$name,]
       df <- df[df$county %in% input$name2,]
-      colnames(df)=c("xval","state","county","variable","value")
+      colnames(df)=c("xval","state","county","county.state","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
       units="Levels"
@@ -165,12 +165,12 @@ sandbox.server4 <- function(input, output, session,data4){
     }
     
     if (input$radio=="log"){
-      module_data.log=module_data[,c("state","county",input$xchoice,input$ystat)]
+      module_data.log=module_data[,c("state","county","county.state",input$xchoice,input$ystat)]
       module_data.log[,input$ystat]=log(module_data.log[,input$ystat])
-      df <- melt(module_data.log,id.vars=c(input$xchoice,"state","county"))
+      df <- melt(module_data.log,id.vars=c(input$xchoice,"state","county","county.state"))
       df <- df[df$state %in% input$name,]
       df <- df[df$county %in% input$name2,]
-      colnames(df)=c("xval","state","county","variable","value")
+      colnames(df)=c("xval","state","county","county.state","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
       units="Log Level"
@@ -178,17 +178,17 @@ sandbox.server4 <- function(input, output, session,data4){
     
     
     if (input$radio=="qoq"){
-      module_data.qoq=module_data[,c("state","county",input$xchoice,input$ystat)]
+      module_data.qoq=module_data[,c("state","county","county.state",input$xchoice,input$ystat)]
       
       module_data.qoq=as.data.frame(group_by(module_data.qoq,state,county) %>% mutate(test=as.numeric(as.vector(Delt(get(input$ystat),k=1)))*100))
       
       module_data.qoq[,input$ystat]=module_data.qoq[,c("test")]
       module_data.qoq=subset(module_data.qoq,select=-c(test))
       
-      df <- melt(module_data.qoq,id.vars=c(input$xchoice,"state","county"))
+      df <- melt(module_data.qoq,id.vars=c(input$xchoice,"state","county","county.state"))
       df <- df[df$state %in% input$name,]
       df <- df[df$county %in% input$name2,]
-      colnames(df)=c("xval","state","county","variable","value")
+      colnames(df)=c("xval","state","county","county.state","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
       units="Percent Change"
@@ -196,7 +196,7 @@ sandbox.server4 <- function(input, output, session,data4){
     
     if (input$radio=="diff"){
       
-      module_data.diff=module_data[,c("state","county",input$xchoice,input$ystat)]
+      module_data.diff=module_data[,c("state","county","county.state",input$xchoice,input$ystat)]
       
       
       module_data.diff=as.data.frame(group_by(module_data.diff,state,county) %>% mutate(test=as.numeric(as.vector(c(NA,diff(get(input$ystat),lag=1))))))
@@ -205,10 +205,10 @@ sandbox.server4 <- function(input, output, session,data4){
       module_data.diff=subset(module_data.diff,select=-c(test))
       
       
-      df <- melt(module_data.diff,id.vars=c(input$xchoice,"state","county"))
+      df <- melt(module_data.diff,id.vars=c(input$xchoice,"state","county","county.state"))
       df <- df[df$state %in% input$name,]
       df <- df[df$county %in% input$name2,]
-      colnames(df)=c("xval","state","county","variable","value")
+      colnames(df)=c("xval","state","county","county.state","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
       units="New Cases"
@@ -234,17 +234,17 @@ sandbox.server4 <- function(input, output, session,data4){
     }
     
     if (input$radio=="chg.avg"){
-      module_data.chg.avg=module_data[,c("state","county",input$xchoice,input$ystat)]
+      module_data.chg.avg=module_data[,c("state","county","county.state",input$xchoice,input$ystat)]
       
       module_data.chg.avg=as.data.frame(group_by(module_data.chg.avg,state,county) %>% mutate(test=rollapply(as.numeric(as.vector(Delt(get(input$ystat),k=1)))*100,width=7,mean,fill=NA,align="right")))
       
       module_data.chg.avg[,input$ystat]=module_data.chg.avg[,c("test")]
       module_data.chg.avg=subset(module_data.chg.avg,select=-c(test))
       
-      df <- melt(module_data.chg.avg,id.vars=c(input$xchoice,"state","county"))
+      df <- melt(module_data.chg.avg,id.vars=c(input$xchoice,"state","county","county.state"))
       df <- df[df$state %in% input$name,]
       df <- df[df$county %in% input$name2,]
-      colnames(df)=c("xval","state","county","variable","value")
+      colnames(df)=c("xval","state","county","county.state","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
       
@@ -282,14 +282,14 @@ sandbox.server4 <- function(input, output, session,data4){
     }
     
     if (input$chart_type=="bar"){
-      plot_ly(plot.data, x = ~xval,y= ~value, color = ~county, type = 'bar') %>%
+      plot_ly(plot.data, x = ~xval,y= ~value, color = ~county.state, type = 'bar') %>%
         layout(title = input$ystat,
                xaxis = list(title = "Days"),
                yaxis = list (title = unit_input()))
     }
     
     else if (input$chart_type=="line"){
-      plot_ly(plot.data, x = ~xval,y= ~value, color = ~county, type = 'scatter', mode = 'lines') %>%
+      plot_ly(plot.data, x = ~xval,y= ~value, color = ~county.state, type = 'scatter', mode = 'lines') %>%
         layout(title = input$ystat,
                xaxis = list(title = "Days"),
                yaxis = list (title = unit_input()))

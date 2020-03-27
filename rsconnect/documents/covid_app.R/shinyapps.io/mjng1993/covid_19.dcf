@@ -5,8 +5,8 @@ account: mjng1993
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1982300
-bundleId: 2929154
+bundleId: 2933228
 url: https://mjng1993.shinyapps.io/covid_19/
-when: 1585255184.25451
+when: 1585334136.40244
 asMultiple: FALSE
 asStatic: FALSE
