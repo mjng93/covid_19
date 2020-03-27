@@ -6,9 +6,6 @@ library(RColorBrewer)
 library(reshape2)
 library(zoo)
 
-setwd("C:/Users/micha/Dropbox/Files/Projects/covid_19/covid_19")
-
-
 #covid data comes directly from Johns Hopkins University github page
 
 confirmed <-read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv")
@@ -158,8 +155,45 @@ covid.state=merge(covid.kaggle[covid.kaggle$Country.Region=="US",],state.pop,by=
 tests=read.csv("https://covidtracking.com/api/states/daily.csv")
 tests$date=as.Date(as.character(tests$date),format="%Y%m%d")
 colnames(tests)[c(1,2)]=c("Date","state_ab")
-covid.state=merge(covid.state,tests,by=c("Date","state_ab"),all.y=TRUE)
-colnames(covid.state)=c("Date","state_ab","Province.State","Country.Region","Confirmed Cases","Deaths (JHU count)","Recovered Cases","Population","start","start.c.100","start.d.10","Since 1st Case","Since 100th Case","Since 10th Death","state","state_population","Positive Tests","Negative Tests","Pending Tests","Hospitalized Cases","Deaths","Total Tests","dateChecked")
+tests$state_ab=as.character(tests$state_ab)
+
+us.tests=read.csv("https://covidtracking.com/api/us/daily.csv")
+print("Downloaded Testing data from Covid Tracking Project")
+us.tests$date=as.Date(as.character(us.tests$date),format="%Y%m%d")
+colnames(us.tests)[c(1)]=c("Date")
+us.tests$state_ab="US (Total)"
+tests=merge(tests,us.tests[,c("Date","state_ab","positive","negative","pending","hospitalized","death","total","totalTestResults")],by=c("Date","state_ab","positive","negative","pending","hospitalized","death","total","totalTestResults"),all=TRUE)
+tests$state_ab=as.character(tests$state_ab)
+
+covid.state=merge(covid.state,tests[,c("Date","state_ab","positive","negative","pending","hospitalized","death","total","totalTestResults")],by=c("Date","state_ab"),all.y=TRUE)
+
+colnames(covid.state)=c("Date","state_ab","Province.State","Country.Region","Confirmed Cases","Deaths (JHU count)","Recovered Cases","Population","start","start.c.100","start.d.10","Since 1st Case","Since 100th Case","Since 10th Death","state","state_population","Positive Tests","Negative Tests","Pending Tests","Hospitalized Cases","Deaths","Total Tests + Pending","Total Tests")
+covid.state[covid.state$state_ab=="US (Total)","state"]="US (Total)"
+covid.state[covid.state$state_ab=="US (Total)","state_population"]=state.pop[state.pop$state_ab=="US (Total)","state_population"]
+
+
+#county-level data from the New York Times
+
+covid.county=read.csv("https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv")
+print("Downloaded NYT County-Level Data")
+covid.county$date=as.Date(covid.county$date)
+covid.county$state=as.character(covid.county$state)
+covid.county$county=as.character(covid.county$county)
+covid.county$cases=as.numeric(covid.county$cases)
+covid.county$deaths=as.numeric(covid.county$deaths)
+
+covid.county=merge(covid.county,as.data.frame(group_by(covid.county, state,county) %>% filter(cases>=1) %>% summarise(start.c=min(date))),by=c("state","county"),all=TRUE) # add date of 1st case
+covid.county=merge(covid.county,as.data.frame(group_by(covid.county, state,county) %>% filter(cases>=100) %>% summarise(start.c.100=min(date))),by=c("state","county"),all=TRUE) # add date of 100th case
+covid.county=merge(covid.county,as.data.frame(group_by(covid.county, state,county) %>% filter(deaths>=1) %>% summarise(start.d=min(date))),by=c("state","county"),all=TRUE) # add date of 1st death
+
+covid.county$since_start=covid.county$date-covid.county$start.c
+covid.county$since_case_100=covid.county$date-covid.county$start.c.100
+covid.county$since_1st_death=covid.county$date-covid.county$start.d
+
+colnames(covid.county)=c("state","county","Date","fips","Cases","Deaths","start.c","start.c.100","start.d","Since 1st Case","Since 100th Case","Since 1st Death")
+
+covid.county$county.state=paste(covid.county$county,covid.county$state,sep=", ")
+covid.county=arrange(covid.county,Date)
 
 
 

@@ -31,7 +31,7 @@ sandbox.UI <- function(id) {
            #customHeader(title = "Data 'Sandbox' Manipulator"),
            column(12,
                   sidebarLayout(
-                    sidebarPanel(h3("COVID-19 Data"),
+                    sidebarPanel(h3("Country-Level Data"),
                                  radioButtons(ns("chart_type"),
                                               label = "Select Chart Type", 
                                               choices = c("Bar Chart" = "bar","Line Chart"="line"),

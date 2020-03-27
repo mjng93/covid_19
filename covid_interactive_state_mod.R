@@ -35,7 +35,7 @@ sandbox2.UI <- function(id) {
            #customHeader(title = "Data 'Sandbox' Manipulator"),
            column(12,
                   sidebarLayout(
-                    sidebarPanel(h3("COVID-19 Data"),
+                    sidebarPanel(h3("State/Province-Level Data"),
                                  radioButtons(ns("chart_type"),
                                               label = "Select Chart Type", 
                                               choices = c("Bar Chart" = "bar","Line Chart"="line"),
@@ -58,7 +58,7 @@ sandbox2.UI <- function(id) {
                                  selectInput(ns("name2"),
                                              label = "Select State or Province:",
                                              choices = c(unique(covid.kaggle$Province.State)),
-                                             selected = c("New York","Hubei"),
+                                             selected = c("New York","Hubei","Illinois","California","Washington","Pennsylvania"),
                                              multiple = TRUE
                                  ),
                                  

@@ -23,15 +23,15 @@ library(plotly)
 library(ggthemes)
 library(stargazer)
 
-sandbox3.UI <- function(id) {
+sandbox4.UI <- function(id) {
   
   ns <- NS(id)
   
-  tabPanel("State-Level Testing Data",
+  tabPanel("County-Level Data",
            #customHeader(title = "Data 'Sandbox' Manipulator"),
            column(12,
                   sidebarLayout(
-                    sidebarPanel(h3("State-Level Testing Data"),
+                    sidebarPanel(h3("County-Level Data"),
                                  
                                  radioButtons(ns("chart_type"),
                                               label = "Select Chart Type", 
@@ -39,27 +39,33 @@ sandbox3.UI <- function(id) {
                                               selected = "bar"),
                                  selectInput(ns('ystat'),
                                              label = 'Select statistic',
-                                             choices=c("Positive Tests","Negative Tests","Pending Tests","Hospitalized Cases","Deaths","Total Tests"),
-                                             selected="Total Tests"
+                                             choices=c("Cases","Deaths"),
+                                             selected="Cases"
                                  ),
                                  radioButtons(ns("radio"),
                                               label = "Select Data Transformation", 
-                                              choices = c("Levels" = "levels","Share of Total Tests"="total.share","Per Capita Levels" = "pc", "Log Levels" = "log", "Change (Daily)" = "diff", "Percent Change (Daily)" = "qoq","Average Daily Percent Change (Rolling, 7-days)"="chg.avg"), #"Percent Change (10-day)" = "mom"
+                                              choices = c("Levels" = "levels", "Log Levels" = "log", "Change (Daily)" = "diff", "Percent Change (Daily)" = "qoq","Average Daily Percent Change (Rolling, 7-days)"="chg.avg"), #"Percent Change (10-day)" = "mom"
                                               selected = "levels"),
                                  
                                  selectInput(ns('xchoice'),
                                              label = 'Select time horizon',
-                                             choices=c("Date","Since 1st Case","Since 100th Case","Since 10th Death"),
+                                             choices=c("Date","Since 1st Case","Since 100th Case","Since 1st Death"),
                                              selected="Date"
                                  ),
                                  selectInput(ns("name"),
                                              label = "Select State:",
-                                             choices = c(unique(covid.state$state)),
-                                             selected = c("US (Total)"),
+                                             choices = c(unique(covid.county$state)),
+                                             selected = c("New York","Illinois"),
+                                             multiple = TRUE
+                                 ),
+                                 selectInput(ns("name2"),
+                                             label = "Select County:",
+                                             choices = c(unique(covid.county$county)),
+                                             selected = c("New York City","Cook"),
                                              multiple = TRUE
                                  ),
                                  
-                                 downloadButton(ns("CovidTestData"), label = "Download Data")
+                                 downloadButton(ns("CovidCountyData"), label = "Download Data")
                                  
                     ),
                     
@@ -74,15 +80,14 @@ sandbox3.UI <- function(id) {
                                   tabPanel("Table", tableOutput(ns("table")))),
                       
                       
-                      p("Data is sourced from the COVID Tracking Project as posted ",
-                        span(a("online",href="https://covidtracking.com/")),
-                        ". Site currently run by Alexis Madrigal at the Atlantic. ",
-                        "State population data is sourced from the ",
-                        span(a("Census Bureu",href="https://www.census.gov/data/tables/time-series/demo/popest/2010s-state-total.html")),
-                        ". Note that these data may not match with data from Johns Hopkins exactly, as they may be collected from different sources. Data is currently updated through",
-                        span(as.character(format(as.Date(max(covid.state$Date,na.rm=T)),"%B %d, %Y"))),"All code written by Michael Ng, available on",
-                    span(a("Github",href="https://github.com/mjng93/covid_19")),"."
-                        )
+                      p("Data is sourced from the New York Times posted on their ",
+                        span(a("Github page",href="https://github.com/nytimes/covid-19-data")),
+                        " with reporting and dataviz on their",
+                        span(a("web site",href="https://www.nytimes.com/interactive/2020/us/coronavirus-us-cases.html?action=click&module=RelatedLinks&pgtype=Article#g-cases-by-county")),
+                        ". Note that these data may not match with data from Johns Hopkins or the Covid Tracking Project exactly, as they are collected from different sources. Data is currently updated through",
+                        span(as.character(format(as.Date(max(covid.county$Date,na.rm=T)),"%B %d, %Y"))),"All code written by Michael Ng, available on",
+                        span(a("Github",href="https://github.com/mjng93/covid_19")),"."
+                      )
                       
                     )
                     
@@ -98,16 +103,26 @@ sandbox3.UI <- function(id) {
 
 
 
-sandbox.server3 <- function(input, output, session,data3){
+sandbox.server4 <- function(input, output, session,data4){
   
-  module_data=data3
+  module_data=data4
   
-  data_input_tests <- reactive({
+
+  observe({
+  updateSelectInput(session,"name2",
+              label = "Select County:",
+              choices = c(unique(covid.county[covid.county$state %in% input$name,"county"])),
+              selected = c("New York City","Cook")
+  )
+})
+  
+  data_input_county <- reactive({
     if (input$radio=="levels"){
-      module_data.levels=module_data[,c("state",input$xchoice,input$ystat)]
-      df <- melt(module_data.levels,id.vars=c(input$xchoice,"state"))
+      module_data.levels=module_data[,c("state","county",input$xchoice,input$ystat)]
+      df <- melt(module_data.levels,id.vars=c(input$xchoice,"state","county"))
       df <- df[df$state %in% input$name,]
-      colnames(df)=c("xval","state","variable","value")
+      df <- df[df$county %in% input$name2,]
+      colnames(df)=c("xval","state","county","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
       units="Levels"
@@ -150,11 +165,12 @@ sandbox.server3 <- function(input, output, session,data3){
     }
     
     if (input$radio=="log"){
-      module_data.log=module_data[,c("state",input$xchoice,input$ystat)]
+      module_data.log=module_data[,c("state","county",input$xchoice,input$ystat)]
       module_data.log[,input$ystat]=log(module_data.log[,input$ystat])
-      df <- melt(module_data.log,id.vars=c(input$xchoice,"state"))
+      df <- melt(module_data.log,id.vars=c(input$xchoice,"state","county"))
       df <- df[df$state %in% input$name,]
-      colnames(df)=c("xval","state","variable","value")
+      df <- df[df$county %in% input$name2,]
+      colnames(df)=c("xval","state","county","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
       units="Log Level"
@@ -162,16 +178,17 @@ sandbox.server3 <- function(input, output, session,data3){
     
     
     if (input$radio=="qoq"){
-      module_data.qoq=module_data[,c("state",input$xchoice,input$ystat)]
+      module_data.qoq=module_data[,c("state","county",input$xchoice,input$ystat)]
       
-      module_data.qoq=as.data.frame(group_by(module_data.qoq,state) %>% mutate(test=as.numeric(as.vector(Delt(get(input$ystat),k=1)))*100))
+      module_data.qoq=as.data.frame(group_by(module_data.qoq,state,county) %>% mutate(test=as.numeric(as.vector(Delt(get(input$ystat),k=1)))*100))
       
       module_data.qoq[,input$ystat]=module_data.qoq[,c("test")]
       module_data.qoq=subset(module_data.qoq,select=-c(test))
       
-      df <- melt(module_data.qoq,id.vars=c(input$xchoice,"state"))
+      df <- melt(module_data.qoq,id.vars=c(input$xchoice,"state","county"))
       df <- df[df$state %in% input$name,]
-      colnames(df)=c("xval","state","variable","value")
+      df <- df[df$county %in% input$name2,]
+      colnames(df)=c("xval","state","county","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
       units="Percent Change"
@@ -179,18 +196,19 @@ sandbox.server3 <- function(input, output, session,data3){
     
     if (input$radio=="diff"){
       
-      module_data.diff=module_data[,c("state",input$xchoice,input$ystat)]
+      module_data.diff=module_data[,c("state","county",input$xchoice,input$ystat)]
       
       
-      module_data.diff=as.data.frame(group_by(module_data.diff,state) %>% mutate(test=as.numeric(as.vector(c(NA,diff(get(input$ystat),lag=1))))))
+      module_data.diff=as.data.frame(group_by(module_data.diff,state,county) %>% mutate(test=as.numeric(as.vector(c(NA,diff(get(input$ystat),lag=1))))))
       
       module_data.diff[,input$ystat]=module_data.diff[,c("test")]
       module_data.diff=subset(module_data.diff,select=-c(test))
       
       
-      df <- melt(module_data.diff,id.vars=c(input$xchoice,"state"))
+      df <- melt(module_data.diff,id.vars=c(input$xchoice,"state","county"))
       df <- df[df$state %in% input$name,]
-      colnames(df)=c("xval","state","variable","value")
+      df <- df[df$county %in% input$name2,]
+      colnames(df)=c("xval","state","county","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
       units="New Cases"
@@ -216,16 +234,17 @@ sandbox.server3 <- function(input, output, session,data3){
     }
     
     if (input$radio=="chg.avg"){
-      module_data.chg.avg=module_data[,c("state",input$xchoice,input$ystat)]
+      module_data.chg.avg=module_data[,c("state","county",input$xchoice,input$ystat)]
       
-      module_data.chg.avg=as.data.frame(group_by(module_data.chg.avg,state) %>% mutate(test=rollapply(as.numeric(as.vector(Delt(get(input$ystat),k=1)))*100,width=7,mean,fill=NA,align="right")))
+      module_data.chg.avg=as.data.frame(group_by(module_data.chg.avg,state,county) %>% mutate(test=rollapply(as.numeric(as.vector(Delt(get(input$ystat),k=1)))*100,width=7,mean,fill=NA,align="right")))
       
       module_data.chg.avg[,input$ystat]=module_data.chg.avg[,c("test")]
       module_data.chg.avg=subset(module_data.chg.avg,select=-c(test))
       
-      df <- melt(module_data.chg.avg,id.vars=c(input$xchoice,"state"))
+      df <- melt(module_data.chg.avg,id.vars=c(input$xchoice,"state","county"))
       df <- df[df$state %in% input$name,]
-      colnames(df)=c("xval","state","variable","value")
+      df <- df[df$county %in% input$name2,]
+      colnames(df)=c("xval","state","county","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
       
@@ -256,21 +275,21 @@ sandbox.server3 <- function(input, output, session,data3){
   
   output$plot <- renderPlotly({
     
-    plot.data=data_input_tests()
+    plot.data=data_input_county()
     
     if (min(plot.data$xval,na.rm=T)<0){
       plot.data=plot.data[plot.data$xval>=-1,]
     }
     
     if (input$chart_type=="bar"){
-    plot_ly(plot.data, x = ~xval,y= ~value, color = ~state, type = 'bar') %>%
-      layout(title = input$ystat,
-             xaxis = list(title = "Days"),
-             yaxis = list (title = unit_input()))
+      plot_ly(plot.data, x = ~xval,y= ~value, color = ~county, type = 'bar') %>%
+        layout(title = input$ystat,
+               xaxis = list(title = "Days"),
+               yaxis = list (title = unit_input()))
     }
     
     else if (input$chart_type=="line"){
-      plot_ly(plot.data, x = ~xval,y= ~value, color = ~state, type = 'scatter', mode = 'lines') %>%
+      plot_ly(plot.data, x = ~xval,y= ~value, color = ~county, type = 'scatter', mode = 'lines') %>%
         layout(title = input$ystat,
                xaxis = list(title = "Days"),
                yaxis = list (title = unit_input()))
@@ -286,25 +305,27 @@ sandbox.server3 <- function(input, output, session,data3){
   
   output$summary <- renderTable({
     
-    df.sum=data_input_tests()
+    df.sum=data_input_county()
     #df.sum=na.omit(df.sum)
     
-    summary=data.frame(series=numeric(length(input$name)),l1=numeric(length(input$name)),l2=numeric(length(input$name)),l3=numeric(length(input$name)),min=numeric(length(input$name)),max=numeric(length(input$name)),sd=numeric(length(input$name)))
+    summary=data.frame(series=numeric(length(input$name2)),l1=numeric(length(input$name2)),l2=numeric(length(input$name2)),l3=numeric(length(input$name2)),min=numeric(length(input$name2)),max=numeric(length(input$name2)),sd=numeric(length(input$name2)))
     
-    for (i in 1:length(input$name)){
-      summary[i,'series']=input$name[i]
-      summary[i,'l1']=subset(df.sum,state==input$name[i])[nrow(subset(df.sum,state==input$name[i])),"value"]
-      summary[i,'l2']=subset(df.sum,state==input$name[i])[nrow(subset(df.sum,state==input$name[i]))-1,"value"]
-      summary[i,'l3']=subset(df.sum,state==input$name[i])[nrow(subset(df.sum,state==input$name[i]))-2,"value"]
-      summary[i,'min']=min(subset(df.sum,state==input$name[i])[,"value"],na.rm=T)
-      summary[i,'max']=max(subset(df.sum,state==input$name[i])[,"value"],na.rm=T)
-      summary[i,'sd']=sd(subset(df.sum,state==input$name[i])[,"value"],na.rm=T)
+    for (i in 1:length(input$name2)){
+  
+        summary[i,'series']=paste(input$name2[i], subset(df.sum,county==input$name2[i])[nrow(subset(df.sum,county==input$name2[i])),"state"],sep=" County, ")
+      
+      summary[i,'l1']=subset(df.sum,county==input$name2[i])[nrow(subset(df.sum,county==input$name2[i])),"value"]
+      summary[i,'l2']=subset(df.sum,county==input$name2[i])[nrow(subset(df.sum,county==input$name2[i]))-1,"value"]
+      summary[i,'l3']=subset(df.sum,county==input$name2[i])[nrow(subset(df.sum,county==input$name2[i]))-2,"value"]
+      summary[i,'min']=min(subset(df.sum,county==input$name2[i])[,"value"],na.rm=T)
+      summary[i,'max']=max(subset(df.sum,county==input$name2[i])[,"value"],na.rm=T)
+      summary[i,'sd']=sd(subset(df.sum,county==input$name2[i])[,"value"],na.rm=T)
       
     }
-    colnames(summary)=c("Series",subset(df.sum,state==input$name[i])[nrow(subset(df.sum,state==input$name[i])),"xval"],subset(df.sum,state==input$name[i])[nrow(subset(df.sum,state==input$name[i]))-1,"xval"],subset(df.sum,state==input$name[i])[nrow(subset(df.sum,state==input$name[i]))-2,"xval"],"Min","Max","Stdev.")
+    colnames(summary)=c("County",subset(df.sum,county==input$name2[i])[nrow(subset(df.sum,county==input$name2[i])),"xval"],subset(df.sum,county==input$name2[i])[nrow(subset(df.sum,county==input$name2[i]))-1,"xval"],subset(df.sum,county==input$name2[i])[nrow(subset(df.sum,county==input$name2[i]))-2,"xval"],"Min","Max","Stdev.")
     
     if (as.numeric(max(df.sum$xval,na.rm=T))>1800){
-      colnames(summary)=c("Series",as.character(as.Date(subset(df.sum,state==input$name[i])[nrow(subset(df.sum,state==input$name[i])),"xval"])),as.character(as.Date(subset(df.sum,state==input$name[i])[nrow(subset(df.sum,state==input$name[i]))-1,"xval"])),as.character(as.Date(subset(df.sum,state==input$name[i])[nrow(subset(df.sum,state==input$name[i]))-2,"xval"])),"Min","Max","Stdev.")
+      colnames(summary)=c("Series",as.character(as.Date(subset(df.sum,county==input$name2[i])[nrow(subset(df.sum,county==input$name2[i])),"xval"])),as.character(as.Date(subset(df.sum,county==input$name2[i])[nrow(subset(df.sum,county==input$name2[i]))-1,"xval"])),as.character(as.Date(subset(df.sum,county==input$name2[i])[nrow(subset(df.sum,county==input$name2[i]))-2,"xval"])),"Min","Max","Stdev.")
     }
     
     #colnames(summary)[1:4]=c("Series",as.Date(df.sum[nrow(df.sum),"date"]),df.sum[nrow(df.sum)-1,"date"],df.sum[nrow(df.sum)-2,"date"])
@@ -317,8 +338,8 @@ sandbox.server3 <- function(input, output, session,data3){
   
   output$corr <- renderTable({
     
-    df.corr=data_input_tests()
-    df.corr=dcast(df.corr,xval~variable+state,value.var="value",mean)
+    df.corr=data_input_county()
+    df.corr=dcast(df.corr,xval~variable+state+county,value.var="value",mean)
     df.corr1=cor(na.omit(as.matrix(df.corr[,-c(1)])))
     rownames(df.corr1)=colnames(df.corr)[-c(1)]
     df.corr1
@@ -326,22 +347,22 @@ sandbox.server3 <- function(input, output, session,data3){
   },caption="Correlation Matrix",caption.placement = getOption("xtable.caption.placement", "top"),rownames = TRUE)
   
   output$table <- renderTable({
-    df1=data_input_tests()
+    df1=data_input_county()
     #df1$GameID=as.character(df1$GameID)
-    df1=dcast(df1,xval~variable+state,value.var='value',mean)
+    df1=dcast(df1,xval~variable+state+county,value.var='value',mean)
     if (max(df1$xval>1000,na.rm=T)){
       df1$xval=as.character(as.Date(df1$xval))
     }
     df1
   })
   
-  output$CovidTestData <- downloadHandler(
+  output$CovidCountyData <- downloadHandler(
     filename = function() {
-      paste('covid_data_tests', 'csv', sep='.')
+      paste('covid_data_county', 'csv', sep='.')
     },
     content = function(file) {
       
-      write.csv(data_input_tests(), file, row.names = FALSE)
+      write.csv(data_input_county(), file, row.names = FALSE)
     }
   )
   

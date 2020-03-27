@@ -1,6 +1,6 @@
 state,state_population,state_ab,Province.State
 Alabama,4903185,AL,Alabama
-Alaska,731545,AK,
+Alaska,731545,AK,Alaska
 Arizona,7278717,AZ,Arizona
 Arkansas,3017804,AR,Arkansas
 California,39512223,CA,California
@@ -25,7 +25,7 @@ Michigan,9986857,MI,Michigan
 Minnesota,5639632,MN,Minnesota
 Mississippi,2976149,MS,Mississippi
 Missouri,6137428,MO,Missouri
-Montana,1068778,MT,
+Montana,1068778,MT,Montana
 Nebraska,1934408,NE,Nebraska
 Nevada,3080156,NV,Nevada
 New Hampshire,1359711,NH,New Hampshire
@@ -33,20 +33,21 @@ New Jersey,8882190,NJ,New Jersey
 New Mexico,2096829,NM,New Mexico
 New York,19453561,NY,New York
 North Carolina,10488084,NC,North Carolina
-North Dakota,762062,ND,
+North Dakota,762062,ND,North Dakota
 Ohio,11689100,OH,Ohio
 Oklahoma,3956971,OK,Oklahoma
 Oregon,4217737,OR,Oregon
 Pennsylvania,12801989,PA,Pennsylvania
 Rhode Island,1059361,RI,Rhode Island
 South Carolina,5148714,SC,South Carolina
-South Dakota,884659,SD,
+South Dakota,884659,SD,South Dakota
 Tennessee,6829174,TN,Tennessee
 Texas,28995881,TX,Texas
 Utah,3205958,UT,Utah
 Vermont,623989,VT,Vermont
 Virginia,8535519,VA,Virginia
 Washington,7614893,WA,Washington
-West Virginia,1792147,WV,
+West Virginia,1792147,WV,West Virginia
 Wisconsin,5822434,WI,Wisconsin
-Wyoming,578759,WY,
+Wyoming,578759,WY,Wyoming
+US (Total),328239523,US (Total),US (Total)
