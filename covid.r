@@ -111,17 +111,37 @@ covid.kaggle$Country.Region=gsub("UK","United Kingdom",covid.kaggle$Country.Regi
 
 
 #read in any new data from Hopkins Github page directly (state-level data uploaded seperately for each date - choose to download new data if today is a day or later than the most recent data we have stored) : Note that code is not robust yet to fill in multiple missing days of data, only the most recent day's data - will add loop eventually
-if ((Sys.Date()-max(covid.kaggle$ObservationDate))>1){
+if ((Sys.Date()-max(covid.kaggle$ObservationDate,na.rm = T))>1){
 print('Getting new state-level data')
-new_state_data <-read.csv(paste0(paste0("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/",as.character(format(Sys.Date()-1,"%m-%d-%Y"))),".csv"))
+  
+assign(paste0("new_state_data"),read.csv(paste0(paste0("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/",as.character(format(Sys.Date()-1,"%m-%d-%Y"))),".csv")))
+  print(paste0('downloaded state data for ', as.character(format(Sys.Date()-1,"%m-%d-%Y"))))
+
+  new_state_data=new_state_data[,c("Province_State","Country_Region","Confirmed","Deaths","Recovered")]
+  new_state_data$ObservationDate=as.Date(Sys.Date()-1)
+  
+if ((Sys.Date()-max(covid.kaggle$ObservationDate,na.rm = T))>=2){
+  for (i in (2:(Sys.Date()-max(covid.kaggle$ObservationDate,na.rm=T)))){
+  
+assign(paste0("new_state_data_",i),read.csv(paste0(paste0("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/",as.character(format(Sys.Date()-i,"%m-%d-%Y"))),".csv"))[,c("Province_State","Country_Region","Confirmed","Deaths","Recovered")] %>% mutate(ObservationDate=(as.Date(Sys.Date()-i))) )
+ 
+  print(paste0('downloaded state data for ', as.character(format(Sys.Date()-i,"%m-%d-%Y"))))
+new_state_data=rbind(new_state_data,get(paste0("new_state_data_",i)))
+   
+  }
+}
+
+  colnames(new_state_data)=c("Province.State","Country.Region","Confirmed","Deaths","Recovered","ObservationDate")
+  new_state_data$Province.State=as.character(new_state_data$Province.State)
+  new_state_data$Country.Region=as.character(new_state_data$Country.Region)
+  new_state_data=arrange(new_state_data,ObservationDate)
 print("downloaded new state-level data")
-new_state_data=new_state_data[,c("Province_State","Country_Region","Confirmed","Deaths","Recovered")]
-colnames(new_state_data)=c("Province.State","Country.Region","Confirmed","Deaths","Recovered")
-new_state_data$Province.State=as.character(new_state_data$Province.State)
-new_state_data$Country.Region=as.character(new_state_data$Country.Region)
-new_state_data$ObservationDate=as.Date(Sys.Date()-1)
+
 covid.kaggle=merge(covid.kaggle,new_state_data,by=c("Province.State","Country.Region","ObservationDate","Confirmed","Deaths","Recovered"),all=TRUE)
+
+covid.kaggle=as.data.frame(group_by(covid.kaggle,ObservationDate,Province.State,Country.Region) %>% summarise(Confirmed = sum(Confirmed),Deaths=sum(Deaths),Recovered=sum(Recovered))) #add for instances in which there are many observations per date
 write.csv(covid.kaggle,"covid_19_data_base.csv",row.names = FALSE)
+
 }
 
 covid.kaggle=merge(covid.kaggle,pop,by="Country.Region",all=FALSE)
@@ -132,6 +152,9 @@ covid.kaggle=as.data.frame(group_by(covid.kaggle,ObservationDate,Province.State,
 covid.kaggle=merge(covid.kaggle,as.data.frame(group_by(covid.kaggle, Province.State) %>% summarise(start=min(ObservationDate))),by=c("Province.State"),all=FALSE) #add date of first case
 covid.kaggle=merge(covid.kaggle,as.data.frame(group_by(covid.kaggle, Province.State) %>% filter(Confirmed>=100) %>% summarise(start.c.100=min(ObservationDate))),by="Province.State",all=TRUE) # add date of 100th case
 covid.kaggle=merge(covid.kaggle,as.data.frame(group_by(covid.kaggle, Province.State) %>% filter(Deaths>=10) %>% summarise(start.d.10=min(ObservationDate))),by="Province.State",all=TRUE) #add date of 10th death
+
+covid.kaggle=arrange(covid.kaggle,ObservationDate)
+
 
 covid.kaggle$since_start=covid.kaggle$ObservationDate-covid.kaggle$start
 covid.kaggle$since_case_100=covid.kaggle$ObservationDate-covid.kaggle$start.c.100
@@ -145,12 +168,14 @@ covid.kaggle=as.data.frame(group_by(covid.kaggle, Province.State) %>% mutate(cas
 colnames(covid.kaggle)=c("Province.State","Date","Country.Region","Confirmed Cases","Deaths","Recovered Cases","Population","start","start.c.100","start.d.10","Since 1st Case","Since 100th Case","Since 10th Death","Case_Max")
 covid.kaggle=subset(covid.kaggle,Case_Max>=50) #limit states to those with at least 50 cases (~20th percentile)
 covid.kaggle$Case_Max=NULL
-
+state.pop=read.csv("state_pop_match.csv",stringsAsFactors = FALSE) 
+covid.kaggle=merge(covid.kaggle,state.pop,by="Province.State",all.x=TRUE)
+covid.kaggle=arrange(covid.kaggle,Date)
 
 #Add data on testing and hospitalizations from covidtracking.com and state population data from Census
 
-state.pop=read.csv("state_pop_match.csv",stringsAsFactors = FALSE) 
-covid.state=merge(covid.kaggle[covid.kaggle$Country.Region=="US",],state.pop,by="Province.State",all=TRUE)
+covid.state=covid.kaggle[covid.kaggle$Country.Region=="US",]
+#covid.state=merge(covid.kaggle[covid.kaggle$Country.Region=="US",],state.pop,by="Province.State",all=TRUE)
 #tests <- read.csv("states-daily.csv",stringsAsFactors = FALSE) 
 tests=read.csv("https://covidtracking.com/api/states/daily.csv")
 tests$date=as.Date(as.character(tests$date),format="%Y%m%d")

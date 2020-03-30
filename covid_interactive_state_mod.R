@@ -47,7 +47,7 @@ sandbox2.UI <- function(id) {
                                  ),
                                  radioButtons(ns("radio2"),
                                               label = "Select Data Transformation", 
-                                              choices = c("Levels" = "levels", "Log Levels" = "log", "Change (Daily)" = "diff", "Percent Change (Daily)" = "qoq","Average Daily Percent Change (Rolling, 7-days)"="chg.avg"), #"Percent Change (10-day)" = "mom"
+                                              choices = c("Levels" = "levels", "Log Levels" = "log","Per Capita Levels"="pc", "Change (Daily)" = "diff", "Percent Change (Daily)" = "qoq","Average Daily Percent Change (Rolling, 7-days)"="chg.avg"), #"Percent Change (10-day)" = "mom"
                                               selected = "log"),
                                  
                                  selectInput(ns('xchoice2'),
@@ -129,6 +129,18 @@ sandbox.server2 <- function(input, output, session,data2){
       df2$value <- as.numeric(gsub(Inf,NA,df2$value))
       df2$value <- as.numeric(gsub(-Inf,NA,df2$value))
       units="Log Level"
+    }
+    
+    if (input$radio2=="pc"){
+      module_data2.pc=module_data2[,c("Province.State","state_population",input$xchoice2,input$ystat2)]
+      module_data2.pc[,input$ystat2]=(module_data2.pc[,input$ystat2]/module_data2.pc[,"state_population"])*100
+      module_data2.pc$state_population=NULL
+      df2 <- melt(module_data2.pc,id.vars=c(input$xchoice2,"Province.State"))
+      df2 <- df2[df2$Province.State %in% input$name2,]
+      colnames(df2)=c("xval","Province.State","variable","value")
+      df2$value <- as.numeric(gsub(Inf,NA,df2$value))
+      df2$value <- as.numeric(gsub(-Inf,NA,df2$value))
+      units="Percent"
     }
     
     
@@ -213,6 +225,19 @@ sandbox.server2 <- function(input, output, session,data2){
     
   })
   
+  unit_input2 <- reactive({
+    if (input$radio2=="levels"){units="Total Cumulative"}
+    if (input$radio2=="pc"){units="Percent (1=1%)"}
+    if (input$radio2=="log.pc"){units="Log Points: computed as log(1 + Per Capita Level in decimals)"}
+    if (input$radio2=="log"){units="Log Points"}
+    if (input$radio2=="diff"){units="New Cases"}
+    if (input$radio2=="qoq"){units="Percent Change (1=1%)"}
+    if (input$radio2=="chg.avg"){units="Average Daily Percent Change (1=1%)"}
+    
+    units
+    
+  })
+  
   
   output$plot2 <- renderPlotly({
     
@@ -230,14 +255,14 @@ sandbox.server2 <- function(input, output, session,data2){
     plot_ly(plot.data2, x = ~xval,y= ~value, color = ~Province.State, type = 'scatter', mode = 'lines') %>%
       layout(title = input$ystat,
              xaxis = list(title = "Days"),
-             yaxis = list (title = units))
+             yaxis = list (title = unit_input2()))
     }
     
     else if (input$chart_type=="bar"){
       plot_ly(plot.data2, x = ~xval,y= ~value, color = ~Province.State, type = 'bar') %>%
         layout(title = input$ystat,
                xaxis = list(title = "Days"),
-               yaxis = list (title = units))
+               yaxis = list (title = unit_input2()))
     }
     
     
