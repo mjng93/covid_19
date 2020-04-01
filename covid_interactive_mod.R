@@ -54,7 +54,7 @@ sandbox.UI <- function(id) {
                                  selectInput(ns("name"),
                                              label = "Select country:",
                                              choices = c(unique(covid.agg$Country.Region)),
-                                             selected = c("US","Italy","China","Korea, South"),
+                                             selected = c("US","Italy","Germany","France","Spain","China","Korea, South"),
                                              multiple = TRUE
                                  ),
                                  
@@ -245,6 +245,7 @@ sandbox.server <- function(input, output, session,data){
     units
     
   })
+  
   
   output$plot <- renderPlotly({
     

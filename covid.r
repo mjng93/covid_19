@@ -38,14 +38,14 @@ covid$Province.State=as.character(covid$Province.State)
 pop.match <- read.csv("world_bank_pop_match1.csv",stringsAsFactors = FALSE) 
 pop <- read.csv("wb_population.csv",stringsAsFactors = FALSE) 
 pop=merge(pop,pop.match,by="WB.Country.Region",all=FALSE)
-covid=merge(covid,pop,by="Country.Region",all=FALSE)
+covid=merge(covid,pop,by="Country.Region",all.x=TRUE)
 covid$ObservationDate=as.Date(covid$ObservationDate,format="%m/%d/%Y")
 
 colors=rainbow(15, alpha = 1, rev = FALSE)
 
-#top countries are those with over 50 cases
-covid.top=subset(covid,Confirmed>50)
-top.countries=unique(covid.top$Province.State)
+#top countries are those in the top 10% on the most recent date
+covid.top=subset(covid,Confirmed>quantile(covid$Confirmed[covid$ObservationDate==max(covid$ObservationDate)],seq(0,1,.05))[21])
+top.countries=unique(covid.top$Country.Region)
 covid=arrange(covid,ObservationDate)
 
 
@@ -70,9 +70,15 @@ covid.agg$since_death_10=covid.agg$ObservationDate-covid.agg$start.d.10
 
 covid.agg$ObservationDate=as.Date(covid.agg$ObservationDate)
 #top countries are those with over 500 cases
-covid.agg.top=subset(covid.agg,confirmed>50)
+covid.agg.top=subset(covid.agg,confirmed>quantile(covid.agg$Confirmed[covid.agg$ObservationDate==max(covid.agg$ObservationDate)],seq(0,1,.05))[21])
 top.countries=unique(covid.agg.top$Country.Region)
 covid.agg=arrange(covid.agg,ObservationDate)
+
+#top countries are those in the top 10% on the most recent date
+covid.top=subset(covid,Confirmed>quantile(covid$Confirmed[covid$ObservationDate==max(covid$ObservationDate)],seq(0,1,.05))[20])
+top.countries=unique(covid.top$Country.Region)
+covid=arrange(covid,ObservationDate)
+
 
 # #plots
 # 
@@ -96,6 +102,8 @@ covid.agg=arrange(covid.agg,ObservationDate)
 colnames(covid.agg)=c("Country.Region","Date","Confirmed Cases","Deaths","Recovered Cases","Population","start"      ,"start.c.100","start.d.10","Since 1st Case","Since 100th Case","Since 10th Death")
 
 
+covid.agg.total=as.data.frame(group_by(covid.agg,Date) %>% summarise(`Confirmed Cases`=sum(`Confirmed Cases`,na.rm=T),Deaths=sum(Deaths,na.rm=T),`Recovered Cases`=sum(`Recovered Cases`,na.rm=T)))
+
 #----------------#
 #state level data#
 #----------------#
@@ -110,27 +118,41 @@ covid.kaggle$Country.Region=gsub("South Korea","Korea, South",covid.kaggle$Count
 covid.kaggle$Country.Region=gsub("UK","United Kingdom",covid.kaggle$Country.Region)
 
 
-#read in any new data from Hopkins Github page directly (state-level data uploaded seperately for each date - choose to download new data if today is a day or later than the most recent data we have stored) : Note that code is not robust yet to fill in multiple missing days of data, only the most recent day's data - will add loop eventually
-if ((Sys.Date()-max(covid.kaggle$ObservationDate,na.rm = T))>1){
-print('Getting new state-level data')
-  
-assign(paste0("new_state_data"),read.csv(paste0(paste0("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/",as.character(format(Sys.Date()-1,"%m-%d-%Y"))),".csv")))
-  print(paste0('downloaded state data for ', as.character(format(Sys.Date()-1,"%m-%d-%Y"))))
+#read in any new data from Hopkins Github page directly (state-level data uploaded seperately for each date - choose to download new data if today is a day or later than the most recent data we have stored) 
 
-  new_state_data=new_state_data[,c("Province_State","Country_Region","Confirmed","Deaths","Recovered")]
-  new_state_data$ObservationDate=as.Date(Sys.Date()-1)
+#There is a 1 day lag for when the data is uploaded by JHU. Data should be 1 day behind. If the data is 2 days behind or more, then download missing data
+
+if ((Sys.Date()-max(covid.kaggle$ObservationDate,na.rm = T))>1){
   
-if ((Sys.Date()-max(covid.kaggle$ObservationDate,na.rm = T))>=2){
+
+#if data is 3 days behind or more, download backlog of missing data
+  if ((Sys.Date()-max(covid.kaggle$ObservationDate,na.rm = T))>2 ){
+    
+    print('There is a backlog of missing state-level data, downloading backlog...')
+    
+    assign(paste0("new_state_data"),read.csv(paste0(paste0("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/",as.character(format(Sys.Date()-1,"%m-%d-%Y"))),".csv"))[,c("Province_State","Country_Region","Confirmed","Deaths","Recovered")] %>% mutate(ObservationDate=(as.Date(Sys.Date()-1))) )
+    
+    print(paste0('downloaded more state data for yesterday, ', as.character(format(Sys.Date()-1,"%m-%d-%Y"))))
+    
   for (i in (2:(Sys.Date()-max(covid.kaggle$ObservationDate,na.rm=T)))){
   
 assign(paste0("new_state_data_",i),read.csv(paste0(paste0("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/",as.character(format(Sys.Date()-i,"%m-%d-%Y"))),".csv"))[,c("Province_State","Country_Region","Confirmed","Deaths","Recovered")] %>% mutate(ObservationDate=(as.Date(Sys.Date()-i))) )
  
-  print(paste0('downloaded state data for ', as.character(format(Sys.Date()-i,"%m-%d-%Y"))))
+  print(paste0('downloaded more state data for ', as.character(format(Sys.Date()-i,"%m-%d-%Y"))))
 new_state_data=rbind(new_state_data,get(paste0("new_state_data_",i)))
    
   }
-}
-
+  }
+  
+  #if there is only missing data from yesterday, download the data
+  if ((Sys.Date()-max(covid.kaggle$ObservationDate,na.rm=T))==2){
+  assign(paste0("new_state_data"),read.csv(paste0(paste0("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/",as.character(format(Sys.Date()-1,"%m-%d-%Y"))),".csv")))
+  print(paste0('Downloaded yesterdays state data for ', as.character(format(Sys.Date()-1,"%m-%d-%Y"))))
+  new_state_data=new_state_data[,c("Province_State","Country_Region","Confirmed","Deaths","Recovered")]
+  new_state_data$ObservationDate=as.Date(Sys.Date()-1)
+  #new_state_data=rbind(new_state_data_yesterday,new_state_data)
+  }
+  
   colnames(new_state_data)=c("Province.State","Country.Region","Confirmed","Deaths","Recovered","ObservationDate")
   new_state_data$Province.State=as.character(new_state_data$Province.State)
   new_state_data$Country.Region=as.character(new_state_data$Country.Region)
@@ -172,25 +194,32 @@ state.pop=read.csv("state_pop_match.csv",stringsAsFactors = FALSE)
 covid.kaggle=merge(covid.kaggle,state.pop,by="Province.State",all.x=TRUE)
 covid.kaggle=arrange(covid.kaggle,Date)
 
+
+
+
 #Add data on testing and hospitalizations from covidtracking.com and state population data from Census
 
 covid.state=covid.kaggle[covid.kaggle$Country.Region=="US",]
-#covid.state=merge(covid.kaggle[covid.kaggle$Country.Region=="US",],state.pop,by="Province.State",all=TRUE)
+
 #tests <- read.csv("states-daily.csv",stringsAsFactors = FALSE) 
 tests=read.csv("https://covidtracking.com/api/states/daily.csv")
 tests$date=as.Date(as.character(tests$date),format="%Y%m%d")
 colnames(tests)[c(1,2)]=c("Date","state_ab")
 tests$state_ab=as.character(tests$state_ab)
+colnames(tests)=gsub("death","deaths",colnames(tests))
+colnames(tests)=gsub("hospitalized","cumulativeHospitalized",colnames(tests))
 
 us.tests=read.csv("https://covidtracking.com/api/us/daily.csv")
 print("Downloaded Testing data from Covid Tracking Project")
 us.tests$date=as.Date(as.character(us.tests$date),format="%Y%m%d")
 colnames(us.tests)[c(1)]=c("Date")
 us.tests$state_ab="US (Total)"
-tests=merge(tests,us.tests[,c("Date","state_ab","positive","negative","pending","hospitalized","death","total","totalTestResults")],by=c("Date","state_ab","positive","negative","pending","hospitalized","death","total","totalTestResults"),all=TRUE)
+colnames(us.tests)=gsub("death","deaths",colnames(us.tests))
+colnames(us.tests)=gsub("hospitalized","cumulativeHospitalized",colnames(us.tests))
+tests=merge(tests,us.tests[,c("Date","state_ab","positive","negative","pending","cumulativeHospitalized","deaths","total","totalTestResults")],by=c("Date","state_ab","positive","negative","pending","cumulativeHospitalized","deaths","total","totalTestResults"),all=TRUE)
 tests$state_ab=as.character(tests$state_ab)
 
-covid.state=merge(covid.state,tests[,c("Date","state_ab","positive","negative","pending","hospitalized","death","total","totalTestResults")],by=c("Date","state_ab"),all.y=TRUE)
+covid.state=merge(covid.state,tests[,c("Date","state_ab","positive","negative","pending","cumulativeHospitalized","deaths","total","totalTestResults")],by=c("Date","state_ab"),all.y=TRUE)
 
 colnames(covid.state)=c("Date","state_ab","Province.State","Country.Region","Confirmed Cases","Deaths (JHU count)","Recovered Cases","Population","start","start.c.100","start.d.10","Since 1st Case","Since 100th Case","Since 10th Death","state","state_population","Positive Tests","Negative Tests","Pending Tests","Hospitalized Cases","Deaths","Total Tests + Pending","Total Tests")
 covid.state[covid.state$state_ab=="US (Total)","state"]="US (Total)"

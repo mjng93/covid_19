@@ -22,7 +22,7 @@ source("covid_interactive_mod.R", local = TRUE)
 source("covid_interactive_state_mod.R", local = TRUE) 
 source("covid_interactive_tests_mod.R", local = TRUE) 
 source("covid_interactive_county_mod.R", local = TRUE) 
-
+#source("homepage.R", local = TRUE) 
 
 ui <- shinyUI(
   fluidPage(theme=shinytheme('yeti'),
@@ -32,6 +32,9 @@ ui <- shinyUI(
             
             
             navbarPage("Covid-19",
+                       # navbarMenu("Overview",
+                       #            sandbox5.UI(id="sandbox5")
+                       # ),
                        navbarMenu("Country Level Data",
                                   sandbox.UI(id="sandbox")
                        ),
@@ -56,6 +59,7 @@ server <- function(input, output, session){
   callModule(sandbox.server2,id="sandbox2",data2=covid.kaggle)
   callModule(sandbox.server3,id="sandbox3",data3=covid.state)
   callModule(sandbox.server4,id="sandbox4",data4=covid.county)
+  #callModule(sandbox.server5,id="sandbox5",data5=covid.agg,data5a=covid.kaggle,data5b=covid.state,data5c=covid.county)
   
 }
 
