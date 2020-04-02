@@ -45,7 +45,7 @@ sandbox3.UI <- function(id) {
                                  radioButtons(ns("radio"),
                                               label = "Select Data Transformation", 
                                               choices = c("Levels" = "levels","Share of Total Tests"="total.share","Per Capita Levels" = "pc", "Log Levels" = "log", "Change (Daily)" = "diff", "Percent Change (Daily)" = "qoq","Average Daily Percent Change (Rolling, 7-days)"="chg.avg"), #"Percent Change (10-day)" = "mom"
-                                              selected = "levels"),
+                                              selected = "diff"),
                                  
                                  selectInput(ns('xchoice'),
                                              label = 'Select time horizon',

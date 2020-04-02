@@ -36,7 +36,7 @@ sandbox4.UI <- function(id) {
                                  radioButtons(ns("chart_type"),
                                               label = "Select Chart Type", 
                                               choices = c("Bar Chart" = "bar","Line Chart"="line"),
-                                              selected = "bar"),
+                                              selected = "line"),
                                  selectInput(ns('ystat'),
                                              label = 'Select statistic',
                                              choices=c("Cases","Deaths"),
@@ -55,13 +55,13 @@ sandbox4.UI <- function(id) {
                                  selectInput(ns("name"),
                                              label = "Select State:",
                                              choices = c(unique(covid.county$state)),
-                                             selected = c("New York","Illinois"),
+                                             selected = c("New York","Illinois","Michigan","California","Florida"),
                                              multiple = TRUE
                                  ),
                                  selectInput(ns("name2"),
                                              label = "Select County:",
                                              choices = c(unique(covid.county$county)),
-                                             selected = c("New York City","Cook"),
+                                             selected = c("New York City","Cook","Wayne","Los Angeles","Miami-Dade"),
                                              multiple = TRUE
                                  ),
                                  
