@@ -1,6 +1,6 @@
 
 
-#source("covid.r")
+source("covid.r")
 
 library(shiny)
 library(ggplot2)
