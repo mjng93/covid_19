@@ -55,13 +55,13 @@ sandbox4.UI <- function(id) {
                                  selectInput(ns("name"),
                                              label = "Select State:",
                                              choices = c(unique(covid.county$state)),
-                                             selected = c("New York","Illinois","Michigan","California","Florida"),
+                                             selected = c("New York","Illinois","Michigan","California","Florida","Pennsylvania","Louisiana","Massachusetts"),
                                              multiple = TRUE
                                  ),
                                  selectInput(ns("name2"),
                                              label = "Select County:",
                                              choices = c(unique(covid.county$county)),
-                                             selected = c("New York City","Cook","Wayne","Los Angeles","Miami-Dade"),
+                                             selected = c("New York City","Cook","Wayne","Los Angeles","Miami-Dade","Philadelphia","Orleans","Suffolk"),
                                              multiple = TRUE
                                  ),
                                  
@@ -112,7 +112,7 @@ sandbox.server4 <- function(input, output, session,data4){
   updateSelectInput(session,"name2",
               label = "Select County:",
               choices = c(unique(covid.county[covid.county$state %in% input$name,"county"])),
-              selected = c("New York City","Cook")
+              selected = c("New York City","Cook","Wayne","Los Angeles","Miami-Dade","Philadelphia","Orleans","Suffolk")
   )
 })
   

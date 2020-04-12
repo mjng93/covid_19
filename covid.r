@@ -128,20 +128,22 @@ if ((Sys.Date()-max(covid.kaggle$ObservationDate,na.rm = T))>1){
 #if data is 3 days behind or more, download backlog of missing data
   if ((Sys.Date()-max(covid.kaggle$ObservationDate,na.rm = T))>2 ){
     
-    print('There is a backlog of missing state-level data, downloading backlog...')
+    print(paste0(paste0('There is a backlog of missing state-level data. Current data through '),max(covid.kaggle$ObservationDate,na.rm = T), "downloading backlog..."))
     
     assign(paste0("new_state_data"),read.csv(paste0(paste0("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/",as.character(format(Sys.Date()-1,"%m-%d-%Y"))),".csv"))[,c("Province_State","Country_Region","Confirmed","Deaths","Recovered")] %>% mutate(ObservationDate=(as.Date(Sys.Date()-1))) )
     
-    print(paste0('downloaded more state data for yesterday, ', as.character(format(Sys.Date()-1,"%m-%d-%Y"))))
+    print(paste0('downloaded state data for yesterday, ', as.character(format(Sys.Date()-1,"%m-%d-%Y"))))
     
-  for (i in (2:(Sys.Date()-max(covid.kaggle$ObservationDate,na.rm=T)))){
+  for (i in (2:(Sys.Date()-max(covid.kaggle$ObservationDate,na.rm=T))-1)){
   
 assign(paste0("new_state_data_",i),read.csv(paste0(paste0("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/",as.character(format(Sys.Date()-i,"%m-%d-%Y"))),".csv"))[,c("Province_State","Country_Region","Confirmed","Deaths","Recovered")] %>% mutate(ObservationDate=(as.Date(Sys.Date()-i))) )
  
   print(paste0('downloaded more state data for ', as.character(format(Sys.Date()-i,"%m-%d-%Y"))))
 new_state_data=rbind(new_state_data,get(paste0("new_state_data_",i)))
-   
+
   }
+    new_state_data[new_state_data$ObservationDate %in% covid.kaggle$Date,]=NA
+    
   }
   
   #if there is only missing data from yesterday, download the data
@@ -151,6 +153,8 @@ new_state_data=rbind(new_state_data,get(paste0("new_state_data_",i)))
   new_state_data=new_state_data[,c("Province_State","Country_Region","Confirmed","Deaths","Recovered")]
   new_state_data$ObservationDate=as.Date(Sys.Date()-1)
   #new_state_data=rbind(new_state_data_yesterday,new_state_data)
+  new_state_data[new_state_data$ObservationDate %in% covid.kaggle$Date,]=NA
+  
   }
   
   colnames(new_state_data)=c("Province.State","Country.Region","Confirmed","Deaths","Recovered","ObservationDate")

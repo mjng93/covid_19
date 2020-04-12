@@ -150,6 +150,31 @@ div(
                h5("Deaths",align="center")
         ),
         
+        column(12,
+        p("Yesterday, on ",
+          as.character(format(max(covid.agg$Date,na.rm=T),"%B %d")),
+          ", confirmed cases in the US grew by",
+          format(tail(diff(subset(covid.agg,Country.Region=="US")[,"Confirmed Cases"],lag=1),1),format="d",big.mark = ","),
+          " (",
+          as.character(round(tail(as.numeric(as.vector(Delt(subset(covid.agg,Country.Region=="US")[,"Confirmed Cases"],k=1)))*100,1),1)),
+          "% ), and Deaths grew by",
+          format(tail(diff(subset(covid.agg,Country.Region=="US")[,"Deaths"],lag=1),1),format="d",big.mark = ","),
+          " (",
+          as.character(round(tail(as.numeric(as.vector(Delt(subset(covid.agg,Country.Region=="US")[,"Deaths"],k=1)))*100,1),1)),
+          "% ). Over the past week, cases have increased by",
+          format(tail(diff(subset(covid.agg,Country.Region=="US")[,"Confirmed Cases"],lag=7),1),format="d",big.mark = ","),
+          " (",
+          as.character(round(tail(as.numeric(as.vector(Delt(subset(covid.agg,Country.Region=="US")[,"Confirmed Cases"],k=7)))*100,1),1)),
+          "% ) and deaths have increases by",
+          format(tail(diff(covid.agg[covid.agg$Country.Region=="US","Deaths"],lag=7),1),format="d",big.mark = ","),
+          " (",
+          as.character(round(tail(as.numeric(as.vector(Delt(covid.agg[covid.agg$Country.Region=="US","Deaths"],k=7)))*100,1),1)),
+          "% )."
+          
+        )
+        ),
+        
+        
         br(),
         fluidRow(
           column(6,
@@ -157,33 +182,6 @@ div(
           column(6,
                  plotlyOutput(ns("states.log.deaths")))
         ),
-        
-        br(),
-        
-        column(12,
-               p("Yesterday, on ",
-                 as.character(format(max(covid.agg$Date,na.rm=T),"%B %d")),
-                 ", confirmed cases in the US grew by",
-                 format(tail(diff(subset(covid.agg,Country.Region=="US")[,"Confirmed Cases"],lag=1),1),format="d",big.mark = ","),
-                 " (",
-                 as.character(round(tail(as.numeric(as.vector(Delt(subset(covid.agg,Country.Region=="US")[,"Confirmed Cases"],k=1)))*100,1),1)),
-                 "% ), and Deaths grew by",
-                 format(tail(diff(subset(covid.agg,Country.Region=="US")[,"Deaths"],lag=1),1),format="d",big.mark = ","),
-                 " (",
-                 as.character(round(tail(as.numeric(as.vector(Delt(subset(covid.agg,Country.Region=="US")[,"Deaths"],k=1)))*100,1),1)),
-                 "% ). Over the past week, cases have increased by",
-                 format(tail(diff(subset(covid.agg,Country.Region=="US")[,"Confirmed Cases"],lag=7),1),format="d",big.mark = ","),
-                 " (",
-                 as.character(round(tail(as.numeric(as.vector(Delt(subset(covid.agg,Country.Region=="US")[,"Confirmed Cases"],k=7)))*100,1),1)),
-                 "% ) and deaths have increases by",
-                 format(tail(diff(covid.agg[covid.agg$Country.Region=="US","Deaths"],lag=7),1),format="d",big.mark = ","),
-                 " (",
-                 as.character(round(tail(as.numeric(as.vector(Delt(covid.agg[covid.agg$Country.Region=="US","Deaths"],k=7)))*100,1),1)),
-                 "% )."
-                 
-               )
-               
-        ) ,
         
         br(),
         br(),

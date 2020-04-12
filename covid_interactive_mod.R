@@ -54,7 +54,7 @@ sandbox.UI <- function(id) {
                                  selectInput(ns("name"),
                                              label = "Select country:",
                                              choices = c(unique(covid.agg$Country.Region)),
-                                             selected = c("US","Italy","Germany","France","Spain","China","Korea, South"),
+                                             selected = c("US","Italy","Germany","France","Spain","China","Korea, South","Iran","United Kingdom"),
                                              multiple = TRUE
                                  ),
                                  

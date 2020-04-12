@@ -58,7 +58,7 @@ sandbox2.UI <- function(id) {
                                  selectInput(ns("name2"),
                                              label = "Select State or Province:",
                                              choices = c(unique(covid.kaggle$Province.State)),
-                                             selected = c("New York","Hubei","Illinois","California","Washington","Pennsylvania"),
+                                             selected = c("New York","Hubei","Illinois","California","Washington","Pennsylvania","Michigan","Louisiana","Florida"),
                                              multiple = TRUE
                                  ),
                                  
