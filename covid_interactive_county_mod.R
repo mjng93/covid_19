@@ -81,12 +81,12 @@ sandbox4.UI <- function(id) {
                       
                       
                       p("Data is sourced from the New York Times posted on their ",
-                        span(a("Github page",href="https://github.com/nytimes/covid-19-data")),
+                        span(a("Github page",target="_blank",href="https://github.com/nytimes/covid-19-data")),
                         " with reporting and dataviz on their",
-                        span(a("web site",href="https://www.nytimes.com/interactive/2020/us/coronavirus-us-cases.html?action=click&module=RelatedLinks&pgtype=Article#g-cases-by-county")),
+                        span(a("web site",target="_blank",href="https://www.nytimes.com/interactive/2020/us/coronavirus-us-cases.html?action=click&module=RelatedLinks&pgtype=Article#g-cases-by-county")),
                         ". Note that these data may not match with data from Johns Hopkins or the Covid Tracking Project exactly, as they are collected from different sources. Data is currently updated through",
                         span(as.character(format(as.Date(max(covid.county$Date,na.rm=T)),"%B %d, %Y"))),"All code written by Michael Ng, available on",
-                        span(a("Github",href="https://github.com/mjng93/covid_19")),"."
+                        span(a("Github",target="_blank",href="https://github.com/mjng93/covid_19")),"."
                       )
                       
                     )

@@ -28,7 +28,7 @@ ui <- shinyUI(
   fluidPage(theme=shinytheme('yeti'),
            
             
-            tags$head(includeScript("google_analytics_covid1.js")),
+            tags$head(includeHTML("google_analytics_covid1.html")),
             
             
             navbarPage("Covid-19",
