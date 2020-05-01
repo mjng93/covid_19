@@ -5,6 +5,11 @@ library(tidyr)
 library(RColorBrewer)
 library(reshape2)
 library(zoo)
+library(gridExtra)
+
+Sys.setenv(TZ="America/Chicago")
+
+today=Sys.Date()
 
 #covid data comes directly from Johns Hopkins University github page
 
@@ -122,23 +127,23 @@ covid.kaggle$Country.Region=gsub("UK","United Kingdom",covid.kaggle$Country.Regi
 
 #There is a 1 day lag for when the data is uploaded by JHU. Data should be 1 day behind. If the data is 2 days behind or more, then download missing data
 
-if ((Sys.Date()-max(covid.kaggle$ObservationDate,na.rm = T))>1){
+if ((today-max(covid.kaggle$ObservationDate,na.rm = T))>1){
   
 
 #if data is 3 days behind or more, download backlog of missing data
-  if ((Sys.Date()-max(covid.kaggle$ObservationDate,na.rm = T))>2 ){
+  if ((today-max(covid.kaggle$ObservationDate,na.rm = T))>2 ){
     
     print(paste0(paste0('There is a backlog of missing state-level data. Current data through '),max(covid.kaggle$ObservationDate,na.rm = T), ". Downloading backlog..."))
     
-    assign(paste0("new_state_data"),read.csv(paste0(paste0("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/",as.character(format(Sys.Date()-1,"%m-%d-%Y"))),".csv"))[,c("Province_State","Country_Region","Confirmed","Deaths","Recovered")] %>% mutate(ObservationDate=(as.Date(Sys.Date()-1))) )
+    assign(paste0("new_state_data"),read.csv(paste0(paste0("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/",as.character(format(today-1,"%m-%d-%Y"))),".csv"))[,c("Province_State","Country_Region","Confirmed","Deaths","Recovered")] %>% mutate(ObservationDate=(as.Date(today-1))) )
     
-    print(paste0('downloaded state data for yesterday, ', as.character(format(Sys.Date()-1,"%m-%d-%Y"))))
+    print(paste0('downloaded state data for yesterday, ', as.character(format(today-1,"%m-%d-%Y"))))
     
-  for (i in (2:(Sys.Date()-max(covid.kaggle$ObservationDate,na.rm=T)-1))){
+  for (i in (2:(today-max(covid.kaggle$ObservationDate,na.rm=T)-1))){
   
-assign(paste0("new_state_data_",i),read.csv(paste0(paste0("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/",as.character(format(Sys.Date()-i,"%m-%d-%Y"))),".csv"))[,c("Province_State","Country_Region","Confirmed","Deaths","Recovered")] %>% mutate(ObservationDate=(as.Date(Sys.Date()-i))) )
+assign(paste0("new_state_data_",i),read.csv(paste0(paste0("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/",as.character(format(today-i,"%m-%d-%Y"))),".csv"))[,c("Province_State","Country_Region","Confirmed","Deaths","Recovered")] %>% mutate(ObservationDate=(as.Date(today-i))) )
  
-  print(paste0('downloaded more state data for ', as.character(format(Sys.Date()-i,"%m-%d-%Y"))))
+  print(paste0('downloaded more state data for ', as.character(format(today-i,"%m-%d-%Y"))))
 new_state_data=rbind(new_state_data,get(paste0("new_state_data_",i)))
 
   }
@@ -150,11 +155,11 @@ new_state_data=rbind(new_state_data,get(paste0("new_state_data_",i)))
   }
   
   #if there is only missing data from yesterday, download the data
-  if ((Sys.Date()-max(covid.kaggle$ObservationDate,na.rm=T))==2){
-  assign(paste0("new_state_data"),read.csv(paste0(paste0("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/",as.character(format(Sys.Date()-1,"%m-%d-%Y"))),".csv")))
-  print(paste0('Downloaded yesterdays state data for ', as.character(format(Sys.Date()-1,"%m-%d-%Y"))))
+  if ((today-max(covid.kaggle$ObservationDate,na.rm=T))==2){
+  assign(paste0("new_state_data"),read.csv(paste0(paste0("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/",as.character(format(today-1,"%m-%d-%Y"))),".csv")))
+  print(paste0('Downloaded yesterdays state data for ', as.character(format(today-1,"%m-%d-%Y"))))
   new_state_data=new_state_data[,c("Province_State","Country_Region","Confirmed","Deaths","Recovered")]
-  new_state_data$ObservationDate=as.Date(Sys.Date()-1)
+  new_state_data$ObservationDate=as.Date(today-1)
   #new_state_data=rbind(new_state_data_yesterday,new_state_data)
   new_state_data[new_state_data$ObservationDate %in% covid.kaggle$Date,]=NA
   
@@ -232,6 +237,24 @@ covid.state=merge(covid.state,tests[,c("Date","state_ab","positive","negative","
 colnames(covid.state)=c("Date","state_ab","Province.State","Country.Region","Confirmed Cases","Deaths (JHU count)","Recovered Cases","Population","start","start.c.100","start.d.10","Since 1st Case","Since 100th Case","Since 10th Death","state","state_population","Positive Tests","Negative Tests","Pending Tests","Hospitalized Cases","Deaths","Total Tests + Pending","Total Tests")
 covid.state[covid.state$state_ab=="US (Total)","state"]="US (Total)"
 covid.state[covid.state$state_ab=="US (Total)","state_population"]=state.pop[state.pop$state_ab=="US (Total)","state_population"]
+
+# plots=list()
+# for (i in 1:length(unique(covid.state$state))){
+#   plots[[i]]=ggplot(subset(covid.state,state==unique(covid.state$state)[i]),aes(x=Date)) + geom_line(aes(y=`Positive Tests`/`Total Tests`)) 
+# #+ geom_line(aes(y=`Confirmed Cases`,color='Confirmed Cases'))
+# + ggtitle(paste0(unique(covid.state$state)[i]," - Positive Rate")) 
+# + ylab("Total Cumulative")
+# 
+# }
+# 
+# grid.arrange(plot3,plot4,plot5,plot6,
+#              plot7,plot8,plot9,plot10,
+#              plot11,plot12,plot13,plot14,
+#              plot15,plot16,plot17,plot18,
+#           
+#              ncol=2)
+
+
 
 
 #county-level data from the New York Times

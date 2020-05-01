@@ -282,7 +282,7 @@ div(
                " in general. For one thing, and as noted above, measurment is often unreliable. It's difficult to back out a fatality rate for example, if you don't have exact estimates on the denominantor (how many people have the disease) or the numerator (how many people have actually died from the disease, though this estimate is probably more accurate than the former). In addition, because of the exponential growth of the disease, small changes in initial conditions or assumptions can have large changes in the trajectory of the disease. Finally, government responses to the virus, such as stay at home orders and treatment, are endogenous and need to be incorporated into any model."),
                br(),
                
-               p("Despite these difficulties, various projections have been made by professional epidemiologists about the spread of the disease. The White House released figures that estimate ",
+               p("Despite these difficulties, various projections have been made by professional epidemiologists about the spread of the disease. The White House released figures in March that estimate ",
                span(a("100,000 to 200,000 deaths",target="_blank",href="https://www.vox.com/science-and-health/2020/3/31/21202188/us-deaths-coronavirus-trump-white-house-presser-modeling-100000")),
                "in the US, even incorproating a strong government response. Their models supposedly heavily mirror the model from the",
                span(a("University of Washington",target="_blank",href="https://covid19.healthdata.org/projections")),
@@ -296,7 +296,9 @@ div(
               span(a("digital interactive",target="_blank",href="https://covid-measures.github.io/")),
               " that allow you to adjust assumptions about the virus' spread. The modelers ",
               span(a("note",target="_blank",href="https://twitter.com/morde/status/1242137323132743691?s=20")),
-              " that the results are qualitatively similar to the Imperial College study, even though the empirical framework is totally different."
+              " that the results are qualitatively similar to the Imperial College study, even though the empirical framework is totally different. FiveThirtyEight has compiled various model forecasts for Covid-19 deaths and constantly",
+              span(a("updates",target="_blank",href="https://projects.fivethirtyeight.com/covid-forecasts/")), 
+              "the range of model forecasts online. They also explain the assumptions underlying each model and show confidence intervals for each forecast."
               
                )
                )
@@ -333,7 +335,7 @@ div(
       plot_ly(covid.agg[covid.agg$Country.Region %in% top.countries,], x = ~`Since 100th Case`, y=~log(`Confirmed Cases`), color =  ~Country.Region, type = 'scatter', mode = 'lines',colors = c("steelblue3","red","chartreuse3","purple","darkgoldenrod2","aquamarine1","forestgreen","dodgerblue4","deeppink","azure4","burlywood4","chocolate1","olivedrab1","gray78","black")) %>%
         layout(title = "Total Confirmed Cases (Log Scale)",
                xaxis = list(title = "Days Since 100th Case",range=c(0,max(covid.agg$`Since 100th Case`,na.rm=T))),
-               yaxis = list (title = "Total Cumulative (Log Points)",range=c(4,13)))
+               yaxis = list (title = "Total Cumulative (Log Points)",range=c(4,14)))
       
      
       
@@ -373,7 +375,7 @@ div(
       plot_ly(covid.agg[covid.agg$Country.Region %in% top.countries.deaths,], x = ~`Since 10th Death`, y=~log(Deaths), color =  ~Country.Region, type = 'scatter', mode = 'lines',colors = c("steelblue3","red","chartreuse3","purple","darkgoldenrod2","aquamarine1","forestgreen","dodgerblue4","deeppink","azure4","burlywood4","chocolate1","olivedrab1","gray78","black")) %>%
         layout(title = "Deaths (Log Scale)",
                xaxis = list(title = "Days Since 10th Death",range=c(0,max(covid.agg$`Since 10th Death`,na.rm = T))),
-               yaxis = list (title = "Total Cumulative",range=c(2,10)))
+               yaxis = list (title = "Total Cumulative",range=c(2,11)))
       
     })
     
@@ -417,7 +419,7 @@ div(
       plot_ly(covid.kaggle[covid.kaggle$Province.State %in% top.states,], x = ~`Since 100th Case`, y=~log(`Confirmed Cases`), color =  ~Province.State, type = 'scatter', mode = 'lines',colors = c("steelblue3","red","chartreuse3","purple","darkgoldenrod2","aquamarine1","forestgreen","dodgerblue4","deeppink","azure4","burlywood4","chocolate1","olivedrab1","gray78","black")) %>%
         layout(title = "Total Confirmed Cases by State (Log Scale)",
                xaxis = list(title = "Days Since 100th Case",range=c(0,max(covid.kaggle[covid.kaggle$Province.State %in% top.states,"Since 100th Case"],na.rm=T))),
-               yaxis = list (title = "Total Cumulative (Log Points)",range=c(4,13)))
+               yaxis = list (title = "Total Cumulative (Log Points)",range=c(4,14)))
       
       
       
@@ -448,7 +450,7 @@ div(
       plot_ly(covid.kaggle[covid.kaggle$Province.State %in% top.states,], x = ~`Since 10th Death`, y=~log(Deaths), color =  ~Province.State, type = 'scatter', mode = 'lines',colors = c("steelblue3","red","chartreuse3","purple","darkgoldenrod2","aquamarine1","forestgreen","dodgerblue4","deeppink","azure4","burlywood4","chocolate1","olivedrab1","gray78","black")) %>%
         layout(title = "Deaths by State (Log Scale)",
                xaxis = list(title = "Days Since 10th Death",range=c(0,max(covid.kaggle[covid.kaggle$Province.State %in% top.states,"Since 10th Death"],na.rm=T))),
-               yaxis = list (title = "Total Cumulative (Log Points)",range=c(2,8)))
+               yaxis = list (title = "Total Cumulative (Log Points)",range=c(2,9)))
       
     })
     
