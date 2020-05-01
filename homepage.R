@@ -335,7 +335,7 @@ div(
       plot_ly(covid.agg[covid.agg$Country.Region %in% top.countries,], x = ~`Since 100th Case`, y=~log(`Confirmed Cases`), color =  ~Country.Region, type = 'scatter', mode = 'lines',colors = c("steelblue3","red","chartreuse3","purple","darkgoldenrod2","aquamarine1","forestgreen","dodgerblue4","deeppink","azure4","burlywood4","chocolate1","olivedrab1","gray78","black")) %>%
         layout(title = "Total Confirmed Cases (Log Scale)",
                xaxis = list(title = "Days Since 100th Case",range=c(0,max(covid.agg$`Since 100th Case`,na.rm=T))),
-               yaxis = list (title = "Total Cumulative (Log Points)",range=c(4,14)))
+               yaxis = list (title = "Total Cumulative (Log Points)",range=c(4,15)))
       
      
       
@@ -375,7 +375,7 @@ div(
       plot_ly(covid.agg[covid.agg$Country.Region %in% top.countries.deaths,], x = ~`Since 10th Death`, y=~log(Deaths), color =  ~Country.Region, type = 'scatter', mode = 'lines',colors = c("steelblue3","red","chartreuse3","purple","darkgoldenrod2","aquamarine1","forestgreen","dodgerblue4","deeppink","azure4","burlywood4","chocolate1","olivedrab1","gray78","black")) %>%
         layout(title = "Deaths (Log Scale)",
                xaxis = list(title = "Days Since 10th Death",range=c(0,max(covid.agg$`Since 10th Death`,na.rm = T))),
-               yaxis = list (title = "Total Cumulative",range=c(2,11)))
+               yaxis = list (title = "Total Cumulative",range=c(2,12)))
       
     })
     
@@ -419,7 +419,7 @@ div(
       plot_ly(covid.kaggle[covid.kaggle$Province.State %in% top.states,], x = ~`Since 100th Case`, y=~log(`Confirmed Cases`), color =  ~Province.State, type = 'scatter', mode = 'lines',colors = c("steelblue3","red","chartreuse3","purple","darkgoldenrod2","aquamarine1","forestgreen","dodgerblue4","deeppink","azure4","burlywood4","chocolate1","olivedrab1","gray78","black")) %>%
         layout(title = "Total Confirmed Cases by State (Log Scale)",
                xaxis = list(title = "Days Since 100th Case",range=c(0,max(covid.kaggle[covid.kaggle$Province.State %in% top.states,"Since 100th Case"],na.rm=T))),
-               yaxis = list (title = "Total Cumulative (Log Points)",range=c(4,14)))
+               yaxis = list (title = "Total Cumulative (Log Points)",range=c(4,15)))
       
       
       
@@ -450,7 +450,7 @@ div(
       plot_ly(covid.kaggle[covid.kaggle$Province.State %in% top.states,], x = ~`Since 10th Death`, y=~log(Deaths), color =  ~Province.State, type = 'scatter', mode = 'lines',colors = c("steelblue3","red","chartreuse3","purple","darkgoldenrod2","aquamarine1","forestgreen","dodgerblue4","deeppink","azure4","burlywood4","chocolate1","olivedrab1","gray78","black")) %>%
         layout(title = "Deaths by State (Log Scale)",
                xaxis = list(title = "Days Since 10th Death",range=c(0,max(covid.kaggle[covid.kaggle$Province.State %in% top.states,"Since 10th Death"],na.rm=T))),
-               yaxis = list (title = "Total Cumulative (Log Points)",range=c(2,9)))
+               yaxis = list (title = "Total Cumulative (Log Points)",range=c(2,10)))
       
     })
     
