@@ -47,7 +47,7 @@ sandbox2.UI <- function(id) {
                                  ),
                                  radioButtons(ns("radio2"),
                                               label = "Select Data Transformation", 
-                                              choices = c("Levels" = "levels", "Log Levels" = "log","Per Capita Levels"="pc", "Change (Daily)" = "diff", "Percent Change (Daily)" = "qoq","Average Daily Percent Change (Rolling, 7-days)"="chg.avg"), #"Percent Change (10-day)" = "mom"
+                                              choices = c("Levels" = "levels", "Log Levels" = "log","Per Capita Levels"="pc","Per Capita Daily Change"="pc.d","Average Per Capita Daily Change (Rolling, 7-days)"="pc.d.avg", "Change (Daily)" = "diff", "Percent Change (Daily)" = "qoq","Average Daily Percent Change (Rolling, 7-days)"="chg.avg"), #"Percent Change (10-day)" = "mom"
                                               selected = "log"),
                                  
                                  selectInput(ns('xchoice2'),
@@ -58,7 +58,7 @@ sandbox2.UI <- function(id) {
                                  selectInput(ns("name2"),
                                              label = "Select State or Province:",
                                              choices = c(unique(covid.kaggle$Province.State)),
-                                             selected = c("New York","Hubei","Illinois","California","Washington","Pennsylvania","Michigan","Louisiana","Florida"),
+                                             selected = c("New York","Illinois","California","Washington","Pennsylvania","Ohio","Michigan","Louisiana","Florida","Georgia","District of Columbia"),
                                              multiple = TRUE
                                  ),
                                  
@@ -141,6 +141,36 @@ sandbox.server2 <- function(input, output, session,data2){
       df2$value <- as.numeric(gsub(Inf,NA,df2$value))
       df2$value <- as.numeric(gsub(-Inf,NA,df2$value))
       units="Percent"
+    }
+    
+    if (input$radio2=="pc.d"){
+      module_data2.pc.d=module_data2[,c("Province.State","state_population",input$xchoice2,input$ystat2)]
+      module_data2.pc.d[,input$ystat2]=(module_data2.pc.d[,input$ystat2]/module_data2.pc.d[,"state_population"])*100
+      module_data2.pc.d=as.data.frame(group_by(module_data2.pc.d,Province.State) %>% mutate(test=as.numeric(as.vector(c(NA,diff(get(input$ystat2),lag=1))))))
+      module_data2.pc.d[,input$ystat2]=module_data2.pc.d[,c("test")]
+      module_data2.pc.d=subset(module_data2.pc.d,select=-c(test,state_population))
+      df2 <- melt(module_data2.pc.d,id.vars=c(input$xchoice2,"Province.State"))
+      df2 <- df2[df2$Province.State %in% input$name2,]
+      colnames(df2)=c("xval","Province.State","variable","value")
+      df2$value <- as.numeric(gsub(Inf,NA,df2$value))
+      df2$value <- as.numeric(gsub(-Inf,NA,df2$value))
+      units="Percentage Points"
+    }
+    
+    if (input$radio2=="pc.d.avg"){
+      module_data2.pc.d.avg=module_data2[,c("Province.State","state_population",input$xchoice2,input$ystat2)]
+      module_data2.pc.d.avg[,input$ystat2]=(module_data2.pc.d.avg[,input$ystat2]/module_data2.pc.d.avg[,"state_population"])*100
+      module_data2.pc.d.avg=as.data.frame(group_by(module_data2.pc.d.avg,Province.State) %>% mutate(test=rollapply(as.numeric(as.vector(c(NA,diff(get(input$ystat2),lag=1)))),width=7,mean,fill=NA,align="right")))
+      
+      module_data2.pc.d.avg[,input$ystat2]=module_data2.pc.d.avg[,c("test")]
+      module_data2.pc.d.avg=subset(module_data2.pc.d.avg,select=-c(test,state_population))
+      
+      df2 <- melt(module_data2.pc.d.avg,id.vars=c(input$xchoice2,"Province.State"))
+      df2 <- df2[df2$Province.State %in% input$name2,]
+      colnames(df2)=c("xval","Province.State","variable","value")
+      df2$value <- as.numeric(gsub(Inf,NA,df2$value))
+      df2$value <- as.numeric(gsub(-Inf,NA,df2$value))
+      units="Percentage Points"
     }
     
     
@@ -232,6 +262,8 @@ sandbox.server2 <- function(input, output, session,data2){
     if (input$radio2=="log"){units="Log Points"}
     if (input$radio2=="diff"){units="New Cases"}
     if (input$radio2=="qoq"){units="Percent Change (1=1%)"}
+    if (input$radio2=="pc.d"){units="Percentage Points"}
+    if (input$radio2=="pc.d.avg"){units="Percentage Points"}
     if (input$radio2=="chg.avg"){units="Average Daily Percent Change (1=1%)"}
     
     units

@@ -44,7 +44,7 @@ sandbox3.UI <- function(id) {
                                  ),
                                  radioButtons(ns("radio"),
                                               label = "Select Data Transformation", 
-                                              choices = c("Levels" = "levels","Share of Total Tests"="total.share","Per Capita Levels" = "pc", "Log Levels" = "log", "Change (Daily)" = "diff", "Percent Change (Daily)" = "qoq","Average Daily Percent Change (Rolling, 7-days)"="chg.avg"), #"Percent Change (10-day)" = "mom"
+                                              choices = c("Levels" = "levels","Share of Total Tests"="total.share","Per Capita Levels" = "pc","Per Capita Daily Change"="pc.d","Average Per Capita Daily Change (Rolling, 7-days)"="pc.d.avg", "Log Levels" = "log", "Change (Daily)" = "diff", "Percent Change (Daily)" = "qoq","Average Daily Percent Change (Rolling, 7-days)"="chg.avg"), #"Percent Change (10-day)" = "mom"
                                               selected = "diff"),
                                  
                                  selectInput(ns('xchoice'),
@@ -81,8 +81,8 @@ sandbox3.UI <- function(id) {
                         span(a("Census Bureu",target="_blank",href="https://www.census.gov/data/tables/time-series/demo/popest/2010s-state-total.html")),
                         ". Note that these data may not match with data from Johns Hopkins exactly, as they may be collected from different sources. Data is currently updated through",
                         span(as.character(format(as.Date(max(covid.state$Date,na.rm=T)),"%B %d, %Y"))),"All code written by Michael Ng, available on",
-                    span(a("Github",target="_blank",href="https://github.com/mjng93/covid_19")),"."
-                        )
+                        span(a("Github",target="_blank",href="https://github.com/mjng93/covid_19")),"."
+                      )
                       
                     )
                     
@@ -158,6 +158,36 @@ sandbox.server3 <- function(input, output, session,data3){
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
       units="Log Level"
+    }
+    
+    if (input$radio=="pc.d"){
+      module_data.pc.d=module_data[,c("state","state_population",input$xchoice,input$ystat)]
+      module_data.pc.d[,input$ystat]=(module_data.pc.d[,input$ystat]/module_data.pc.d[,"state_population"])*100
+      module_data.pc.d=as.data.frame(group_by(module_data.pc.d,state) %>% mutate(test=as.numeric(as.vector(c(NA,diff(get(input$ystat),lag=1))))))
+      module_data.pc.d[,input$ystat]=module_data.pc.d[,c("test")]
+      module_data.pc.d=subset(module_data.pc.d,select=-c(test,state_population))
+      df <- melt(module_data.pc.d,id.vars=c(input$xchoice,"state"))
+      df <- df[df$state %in% input$name,]
+      colnames(df)=c("xval","state","variable","value")
+      df$value <- as.numeric(gsub(Inf,NA,df$value))
+      df$value <- as.numeric(gsub(-Inf,NA,df$value))
+      units="Percentage Points"
+    }
+    
+    if (input$radio=="pc.d.avg"){
+      module_data.pc.d.avg=module_data[,c("state","state_population",input$xchoice,input$ystat)]
+      module_data.pc.d.avg[,input$ystat]=(module_data.pc.d.avg[,input$ystat]/module_data.pc.d.avg[,"state_population"])*100
+      module_data.pc.d.avg=as.data.frame(group_by(module_data.pc.d.avg,state) %>% mutate(test=rollapply(as.numeric(as.vector(c(NA,diff(get(input$ystat),lag=1)))),width=7,mean,fill=NA,align="right")))
+      
+      module_data.pc.d.avg[,input$ystat]=module_data.pc.d.avg[,c("test")]
+      module_data.pc.d.avg=subset(module_data.pc.d.avg,select=-c(test,state_population))
+      
+      df <- melt(module_data.pc.d.avg,id.vars=c(input$xchoice,"state"))
+      df <- df[df$state %in% input$name,]
+      colnames(df)=c("xval","state","variable","value")
+      df$value <- as.numeric(gsub(Inf,NA,df$value))
+      df$value <- as.numeric(gsub(-Inf,NA,df$value))
+      units="Percentage Points"
     }
     
     
@@ -248,6 +278,8 @@ sandbox.server3 <- function(input, output, session,data3){
     if (input$radio=="log"){units="Log Points"}
     if (input$radio=="diff"){units="New Tests"}
     if (input$radio=="qoq"){units="Percent Change (1=1%)"}
+    if (input$radio=="pc.d"){units="Percentage Points"}
+    if (input$radio=="pc.d.avg"){units="Percentage Points"}
     if (input$radio=="chg.avg"){units="Average Daily Percent Change (1=1%)"}
     
     units

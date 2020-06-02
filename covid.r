@@ -129,8 +129,8 @@ covid.kaggle$Country.Region=gsub("UK","United Kingdom",covid.kaggle$Country.Regi
 
 if ((today-max(covid.kaggle$ObservationDate,na.rm = T))>1){
   
-
-#if data is 3 days behind or more, download backlog of missing data
+  
+  #if data is 3 days behind or more, download backlog of missing data
   if ((today-max(covid.kaggle$ObservationDate,na.rm = T))>2 ){
     
     print(paste0(paste0('There is a backlog of missing state-level data. Current data through '),max(covid.kaggle$ObservationDate,na.rm = T), ". Downloading backlog..."))
@@ -139,14 +139,14 @@ if ((today-max(covid.kaggle$ObservationDate,na.rm = T))>1){
     
     print(paste0('downloaded state data for yesterday, ', as.character(format(today-1,"%m-%d-%Y"))))
     
-  for (i in (2:(today-max(covid.kaggle$ObservationDate,na.rm=T)-1))){
-  
-assign(paste0("new_state_data_",i),read.csv(paste0(paste0("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/",as.character(format(today-i,"%m-%d-%Y"))),".csv"))[,c("Province_State","Country_Region","Confirmed","Deaths","Recovered")] %>% mutate(ObservationDate=(as.Date(today-i))) )
- 
-  print(paste0('downloaded more state data for ', as.character(format(today-i,"%m-%d-%Y"))))
-new_state_data=rbind(new_state_data,get(paste0("new_state_data_",i)))
-
-  }
+    for (i in (2:(today-max(covid.kaggle$ObservationDate,na.rm=T)-1))){
+      
+      assign(paste0("new_state_data_",i),read.csv(paste0(paste0("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/",as.character(format(today-i,"%m-%d-%Y"))),".csv"))[,c("Province_State","Country_Region","Confirmed","Deaths","Recovered")] %>% mutate(ObservationDate=(as.Date(today-i))) )
+      
+      print(paste0('downloaded more state data for ', as.character(format(today-i,"%m-%d-%Y"))))
+      new_state_data=rbind(new_state_data,get(paste0("new_state_data_",i)))
+      
+    }
     
     new_state_data=new_state_data[!duplicated(new_state_data),]
     new_state_data[new_state_data$ObservationDate %in% covid.kaggle$Date,]=NA
@@ -156,27 +156,27 @@ new_state_data=rbind(new_state_data,get(paste0("new_state_data_",i)))
   
   #if there is only missing data from yesterday, download the data
   if ((today-max(covid.kaggle$ObservationDate,na.rm=T))==2){
-  assign(paste0("new_state_data"),read.csv(paste0(paste0("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/",as.character(format(today-1,"%m-%d-%Y"))),".csv")))
-  print(paste0('Downloaded yesterdays state data for ', as.character(format(today-1,"%m-%d-%Y"))))
-  new_state_data=new_state_data[,c("Province_State","Country_Region","Confirmed","Deaths","Recovered")]
-  new_state_data$ObservationDate=as.Date(today-1)
-  #new_state_data=rbind(new_state_data_yesterday,new_state_data)
-  new_state_data[new_state_data$ObservationDate %in% covid.kaggle$Date,]=NA
-  
+    assign(paste0("new_state_data"),read.csv(paste0(paste0("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/",as.character(format(today-1,"%m-%d-%Y"))),".csv")))
+    print(paste0('Downloaded yesterdays state data for ', as.character(format(today-1,"%m-%d-%Y"))))
+    new_state_data=new_state_data[,c("Province_State","Country_Region","Confirmed","Deaths","Recovered")]
+    new_state_data$ObservationDate=as.Date(today-1)
+    #new_state_data=rbind(new_state_data_yesterday,new_state_data)
+    new_state_data[new_state_data$ObservationDate %in% covid.kaggle$Date,]=NA
+    
   }
   
   colnames(new_state_data)=c("Province.State","Country.Region","Confirmed","Deaths","Recovered","ObservationDate")
   new_state_data$Province.State=as.character(new_state_data$Province.State)
   new_state_data$Country.Region=as.character(new_state_data$Country.Region)
   new_state_data=arrange(new_state_data,ObservationDate)
-print("downloaded new state-level data")
-
-covid.kaggle=merge(covid.kaggle,new_state_data,by=c("Province.State","Country.Region","ObservationDate","Confirmed","Deaths","Recovered"),all=TRUE)
-covid.kaggle=covid.kaggle[!duplicated(covid.kaggle),]
-
-covid.kaggle=as.data.frame(group_by(covid.kaggle,ObservationDate,Province.State,Country.Region) %>% summarise(Confirmed = sum(Confirmed),Deaths=sum(Deaths),Recovered=sum(Recovered))) #add for instances in which there are many observations per date
-write.csv(covid.kaggle,"covid_19_data_base.csv",row.names = FALSE)
-
+  print("downloaded new state-level data")
+  
+  covid.kaggle=merge(covid.kaggle,new_state_data,by=c("Province.State","Country.Region","ObservationDate","Confirmed","Deaths","Recovered"),all=TRUE)
+  covid.kaggle=covid.kaggle[!duplicated(covid.kaggle),]
+  
+  covid.kaggle=as.data.frame(group_by(covid.kaggle,ObservationDate,Province.State,Country.Region) %>% summarise(Confirmed = sum(Confirmed),Deaths=sum(Deaths),Recovered=sum(Recovered))) #add for instances in which there are many observations per date
+  write.csv(covid.kaggle,"covid_19_data_base.csv",row.names = FALSE)
+  
 }
 
 covid.kaggle=merge(covid.kaggle,pop,by="Country.Region",all=FALSE)
