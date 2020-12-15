@@ -57,7 +57,7 @@ sandbox2.UI <- function(id) {
                                  ),
                                  selectInput(ns("name2"),
                                              label = "Select State or Province:",
-                                             choices = c(unique(covid.kaggle$Province.State)),
+                                             choices = c(unique(covid.kaggle$Province_State)),
                                              selected = c("New York","Illinois","California","Washington","Pennsylvania","Ohio","Michigan","Louisiana","Florida","Georgia","District of Columbia"),
                                              multiple = TRUE
                                  ),
@@ -107,67 +107,67 @@ sandbox.server2 <- function(input, output, session,data2){
   #Second chart#
   #------------#
   
-  module_data2=data2
+  module_data2=as.data.frame(data2)
   
   data_input2 <- reactive({
     if (input$radio2=="levels"){
-      module_data2.levels=module_data2[,c("Province.State",input$xchoice2,input$ystat2)]
-      df2 <- melt(module_data2.levels,id.vars=c(input$xchoice2,"Province.State"))
-      df2 <- df2[df2$Province.State %in% input$name2,]
-      colnames(df2)=c("xval","Province.State","variable","value")
+      module_data2.levels=module_data2[,c("Province_State",input$xchoice2,input$ystat2)]
+      df2 <- reshape2::melt(module_data2.levels,id.vars=c(input$xchoice2,"Province_State"))
+      df2 <- df2[df2$Province_State %in% input$name2,]
+      colnames(df2)=c("xval","Province_State","variable","value")
       df2$value <- as.numeric(gsub(Inf,NA,df2$value))
       df2$value <- as.numeric(gsub(-Inf,NA,df2$value))
       units="Levels"
     }
     
     if (input$radio2=="log"){
-      module_data2.log=module_data2[,c("Province.State",input$xchoice2,input$ystat2)]
+      module_data2.log=module_data2[,c("Province_State",input$xchoice2,input$ystat2)]
       module_data2.log[,input$ystat2]=log(module_data2.log[,input$ystat2])
-      df2 <- melt(module_data2.log,id.vars=c(input$xchoice2,"Province.State"))
-      df2 <- df2[df2$Province.State %in% input$name2,]
-      colnames(df2)=c("xval","Province.State","variable","value")
+      df2 <- reshape2::melt(module_data2.log,id.vars=c(input$xchoice2,"Province_State"))
+      df2 <- df2[df2$Province_State %in% input$name2,]
+      colnames(df2)=c("xval","Province_State","variable","value")
       df2$value <- as.numeric(gsub(Inf,NA,df2$value))
       df2$value <- as.numeric(gsub(-Inf,NA,df2$value))
       units="Log Level"
     }
     
     if (input$radio2=="pc"){
-      module_data2.pc=module_data2[,c("Province.State","state_population",input$xchoice2,input$ystat2)]
+      module_data2.pc=module_data2[,c("Province_State","state_population",input$xchoice2,input$ystat2)]
       module_data2.pc[,input$ystat2]=(module_data2.pc[,input$ystat2]/module_data2.pc[,"state_population"])*100
       module_data2.pc$state_population=NULL
-      df2 <- melt(module_data2.pc,id.vars=c(input$xchoice2,"Province.State"))
-      df2 <- df2[df2$Province.State %in% input$name2,]
-      colnames(df2)=c("xval","Province.State","variable","value")
+      df2 <- reshape2::melt(module_data2.pc,id.vars=c(input$xchoice2,"Province_State"))
+      df2 <- df2[df2$Province_State %in% input$name2,]
+      colnames(df2)=c("xval","Province_State","variable","value")
       df2$value <- as.numeric(gsub(Inf,NA,df2$value))
       df2$value <- as.numeric(gsub(-Inf,NA,df2$value))
       units="Percent"
     }
     
     if (input$radio2=="pc.d"){
-      module_data2.pc.d=module_data2[,c("Province.State","state_population",input$xchoice2,input$ystat2)]
+      module_data2.pc.d=module_data2[,c("Province_State","state_population",input$xchoice2,input$ystat2)]
       module_data2.pc.d[,input$ystat2]=(module_data2.pc.d[,input$ystat2]/module_data2.pc.d[,"state_population"])*100
-      module_data2.pc.d=as.data.frame(group_by(module_data2.pc.d,Province.State) %>% mutate(test=as.numeric(as.vector(c(NA,diff(get(input$ystat2),lag=1))))))
+      module_data2.pc.d=as.data.frame(group_by(module_data2.pc.d,Province_State) %>% mutate(test=as.numeric(as.vector(c(NA,diff(get(input$ystat2),lag=1))))))
       module_data2.pc.d[,input$ystat2]=module_data2.pc.d[,c("test")]
       module_data2.pc.d=subset(module_data2.pc.d,select=-c(test,state_population))
-      df2 <- melt(module_data2.pc.d,id.vars=c(input$xchoice2,"Province.State"))
-      df2 <- df2[df2$Province.State %in% input$name2,]
-      colnames(df2)=c("xval","Province.State","variable","value")
+      df2 <- reshape2::melt(module_data2.pc.d,id.vars=c(input$xchoice2,"Province_State"))
+      df2 <- df2[df2$Province_State %in% input$name2,]
+      colnames(df2)=c("xval","Province_State","variable","value")
       df2$value <- as.numeric(gsub(Inf,NA,df2$value))
       df2$value <- as.numeric(gsub(-Inf,NA,df2$value))
       units="Percentage Points"
     }
     
     if (input$radio2=="pc.d.avg"){
-      module_data2.pc.d.avg=module_data2[,c("Province.State","state_population",input$xchoice2,input$ystat2)]
+      module_data2.pc.d.avg=module_data2[,c("Province_State","state_population",input$xchoice2,input$ystat2)]
       module_data2.pc.d.avg[,input$ystat2]=(module_data2.pc.d.avg[,input$ystat2]/module_data2.pc.d.avg[,"state_population"])*100
-      module_data2.pc.d.avg=as.data.frame(group_by(module_data2.pc.d.avg,Province.State) %>% mutate(test=rollapply(as.numeric(as.vector(c(NA,diff(get(input$ystat2),lag=1)))),width=7,mean,fill=NA,align="right")))
+      module_data2.pc.d.avg=as.data.frame(group_by(module_data2.pc.d.avg,Province_State) %>% mutate(test=rollapply(as.numeric(as.vector(c(NA,diff(get(input$ystat2),lag=1)))),width=7,mean,fill=NA,align="right")))
       
       module_data2.pc.d.avg[,input$ystat2]=module_data2.pc.d.avg[,c("test")]
       module_data2.pc.d.avg=subset(module_data2.pc.d.avg,select=-c(test,state_population))
       
-      df2 <- melt(module_data2.pc.d.avg,id.vars=c(input$xchoice2,"Province.State"))
-      df2 <- df2[df2$Province.State %in% input$name2,]
-      colnames(df2)=c("xval","Province.State","variable","value")
+      df2 <- reshape2::melt(module_data2.pc.d.avg,id.vars=c(input$xchoice2,"Province_State"))
+      df2 <- df2[df2$Province_State %in% input$name2,]
+      colnames(df2)=c("xval","Province_State","variable","value")
       df2$value <- as.numeric(gsub(Inf,NA,df2$value))
       df2$value <- as.numeric(gsub(-Inf,NA,df2$value))
       units="Percentage Points"
@@ -175,18 +175,18 @@ sandbox.server2 <- function(input, output, session,data2){
     
     
     if (input$radio2=="qoq"){
-      module_data2.qoq=module_data2[,c("Province.State",input$xchoice2,input$ystat2)]
+      module_data2.qoq=module_data2[,c("Province_State",input$xchoice2,input$ystat2)]
       
       
-      module_data2.qoq=as.data.frame(group_by(module_data2.qoq,Province.State) %>% mutate(test=as.numeric(as.vector(Delt(get(input$ystat2),k=1)))*100))
+      module_data2.qoq=as.data.frame(group_by(module_data2.qoq,Province_State) %>% mutate(test=as.numeric(as.vector(Delt(get(input$ystat2),k=1)))*100))
       
       module_data2.qoq[,input$ystat2]=module_data2.qoq[,c("test")]
       module_data2.qoq=subset(module_data2.qoq,select=-c(test))
       
       
-      df2 <- melt(module_data2.qoq,id.vars=c(input$xchoice2,"Province.State"))
-      df2 <- df2[df2$Province.State %in% input$name2,]
-      colnames(df2)=c("xval","Province.State","variable","value")
+      df2 <- reshape2::melt(module_data2.qoq,id.vars=c(input$xchoice2,"Province_State"))
+      df2 <- df2[df2$Province_State %in% input$name2,]
+      colnames(df2)=c("xval","Province_State","variable","value")
       df2$value <- as.numeric(gsub(Inf,NA,df2$value))
       df2$value <- as.numeric(gsub(-Inf,NA,df2$value))
       units="Percent Change"
@@ -194,18 +194,18 @@ sandbox.server2 <- function(input, output, session,data2){
     
     if (input$radio2=="diff"){
       
-      module_data2.diff=module_data2[,c("Province.State",input$xchoice2,input$ystat2)]
+      module_data2.diff=module_data2[,c("Province_State",input$xchoice2,input$ystat2)]
       
       
-      module_data2.diff=as.data.frame(group_by(module_data2.diff,Province.State) %>% mutate(test=as.numeric(as.vector(c(NA,diff(get(input$ystat2),lag=1))))))
+      module_data2.diff=as.data.frame(group_by(module_data2.diff,Province_State) %>% mutate(test=as.numeric(as.vector(c(NA,diff(get(input$ystat2),lag=1))))))
       
       module_data2.diff[,input$ystat2]=module_data2.diff[,c("test")]
       module_data2.diff=subset(module_data2.diff,select=-c(test))
       
       
-      df2 <- melt(module_data2.diff,id.vars=c(input$xchoice2,"Province.State"))
-      df2 <- df2[df2$Province.State %in% input$name2,]
-      colnames(df2)=c("xval","Province.State","variable","value")
+      df2 <- reshape2::melt(module_data2.diff,id.vars=c(input$xchoice2,"Province_State"))
+      df2 <- df2[df2$Province_State %in% input$name2,]
+      colnames(df2)=c("xval","Province_State","variable","value")
       df2$value <- as.numeric(gsub(Inf,NA,df2$value))
       df2$value <- as.numeric(gsub(-Inf,NA,df2$value))
       units="New Cases"
@@ -213,16 +213,16 @@ sandbox.server2 <- function(input, output, session,data2){
     }
     
     if (input$radio2=="mom"){
-      module_data2.mom=module_data2[,c("Province.State",input$xchoice2,input$ystat2)]
+      module_data2.mom=module_data2[,c("Province_State",input$xchoice2,input$ystat2)]
       
-      module_data2.mom=as.data.frame(group_by(module_data2.mom,Province.State) %>% mutate(test=as.numeric(as.vector(Delt(get(input$ystat2),k=7)))*100))
+      module_data2.mom=as.data.frame(group_by(module_data2.mom,Province_State) %>% mutate(test=as.numeric(as.vector(Delt(get(input$ystat2),k=7)))*100))
       
       module_data2.mom[,input$ystat2]=module_data2.mom[,c("test")]
       module_data2.mom$test=NULL
       
-      df2 <- melt(module_data2.mom,id.vars=c(input$xchoice2,"Province.State"))
-      df2 <- df2[df2$Province.State %in% input$name2,]
-      colnames(df2)=c("xval","Province.State","variable","value")
+      df2 <- reshape2::melt(module_data2.mom,id.vars=c(input$xchoice2,"Province_State"))
+      df2 <- df2[df2$Province_State %in% input$name2,]
+      colnames(df2)=c("xval","Province_State","variable","value")
       df2$value <- as.numeric(gsub(Inf,NA,df2$value))
       df2$value <- as.numeric(gsub(-Inf,NA,df2$value))
       print(tail(df2))
@@ -231,16 +231,16 @@ sandbox.server2 <- function(input, output, session,data2){
     }
     
     if (input$radio2=="chg.avg"){
-      module_data2.chg.avg=module_data2[,c("Province.State",input$xchoice2,input$ystat2)]
+      module_data2.chg.avg=module_data2[,c("Province_State",input$xchoice2,input$ystat2)]
       
-      module_data2.chg.avg=as.data.frame(group_by(module_data2.chg.avg,Province.State) %>% mutate(test=rollapply(as.numeric(as.vector(Delt(get(input$ystat2),k=1)))*100,width=7,mean,fill=NA,align="right")))
+      module_data2.chg.avg=as.data.frame(group_by(module_data2.chg.avg,Province_State) %>% mutate(test=rollapply(as.numeric(as.vector(Delt(get(input$ystat2),k=1)))*100,width=7,mean,fill=NA,align="right")))
       
       module_data2.chg.avg[,input$ystat2]=module_data2.chg.avg[,c("test")]
       module_data2.chg.avg=subset(module_data2.chg.avg,select=-c(test))
       
-      df2 <- melt(module_data2.chg.avg,id.vars=c(input$xchoice2,"Province.State"))
-      df2 <- df2[df2$Province.State %in% input$name2,]
-      colnames(df2)=c("xval","Province.State","variable","value")
+      df2 <- reshape2::melt(module_data2.chg.avg,id.vars=c(input$xchoice2,"Province_State"))
+      df2 <- df2[df2$Province_State %in% input$name2,]
+      colnames(df2)=c("xval","Province_State","variable","value")
       df2$value <- as.numeric(gsub(Inf,NA,df2$value))
       df2$value <- as.numeric(gsub(-Inf,NA,df2$value))
       
@@ -274,7 +274,7 @@ sandbox.server2 <- function(input, output, session,data2){
   output$plot2 <- renderPlotly({
     
     # plot <-   ggplot(data_input()) +              
-    #   geom_line(aes(x = input$xchoice2, y = value, colour = Province.State)) + scale_colour_discrete(name2 = NULL) + labs(x = NULL, y = input$radio2, title = "COVID Data",cap=c()   + theme(legend.position = "bottom", legend.margin = margin(t = -.1, unit='cm')) + theme(panel.grid.minor.x=element_blank(), panel.grid.major.x=element_blank()) + theme(plot.margin=unit(c(.1,.1,.1,.1),"cm"))
+    #   geom_line(aes(x = input$xchoice2, y = value, colour = Province_State)) + scale_colour_discrete(name2 = NULL) + labs(x = NULL, y = input$radio2, title = "COVID Data",cap=c()   + theme(legend.position = "bottom", legend.margin = margin(t = -.1, unit='cm')) + theme(panel.grid.minor.x=element_blank(), panel.grid.major.x=element_blank()) + theme(plot.margin=unit(c(.1,.1,.1,.1),"cm"))
     # 
     # print(plot)
     
@@ -284,14 +284,14 @@ sandbox.server2 <- function(input, output, session,data2){
     }
     
     if (input$chart_type=="line"){
-    plot_ly(plot.data2, x = ~xval,y= ~value, color = ~Province.State, type = 'scatter', mode = 'lines') %>%
+    plot_ly(plot.data2, x = ~xval,y= ~value, color = ~Province_State, type = 'scatter', mode = 'lines') %>%
       layout(title = input$ystat,
              xaxis = list(title = "Days"),
              yaxis = list (title = unit_input2()))
     }
     
     else if (input$chart_type=="bar"){
-      plot_ly(plot.data2, x = ~xval,y= ~value, color = ~Province.State, type = 'bar') %>%
+      plot_ly(plot.data2, x = ~xval,y= ~value, color = ~Province_State, type = 'bar') %>%
         layout(title = input$ystat,
                xaxis = list(title = "Days"),
                yaxis = list (title = unit_input2()))
@@ -315,18 +315,18 @@ sandbox.server2 <- function(input, output, session,data2){
     
     for (i in 1:length(input$name2)){
       summary[i,'series']=input$name2[i]
-      summary[i,'l1']=subset(df2.sum,Province.State==input$name2[i])[nrow(subset(df2.sum,Province.State==input$name2[i])),"value"]
-      summary[i,'l2']=subset(df2.sum,Province.State==input$name2[i])[nrow(subset(df2.sum,Province.State==input$name2[i]))-1,"value"]
-      summary[i,'l3']=subset(df2.sum,Province.State==input$name2[i])[nrow(subset(df2.sum,Province.State==input$name2[i]))-2,"value"]
-      summary[i,'min']=min(subset(df2.sum,Province.State==input$name2[i])[,"value"],na.rm=T)
-      summary[i,'max']=max(subset(df2.sum,Province.State==input$name2[i])[,"value"],na.rm=T)
-      summary[i,'sd']=sd(subset(df2.sum,Province.State==input$name2[i])[,"value"],na.rm=T)
+      summary[i,'l1']=subset(df2.sum,Province_State==input$name2[i])[nrow(subset(df2.sum,Province_State==input$name2[i])),"value"]
+      summary[i,'l2']=subset(df2.sum,Province_State==input$name2[i])[nrow(subset(df2.sum,Province_State==input$name2[i]))-1,"value"]
+      summary[i,'l3']=subset(df2.sum,Province_State==input$name2[i])[nrow(subset(df2.sum,Province_State==input$name2[i]))-2,"value"]
+      summary[i,'min']=min(subset(df2.sum,Province_State==input$name2[i])[,"value"],na.rm=T)
+      summary[i,'max']=max(subset(df2.sum,Province_State==input$name2[i])[,"value"],na.rm=T)
+      summary[i,'sd']=sd(subset(df2.sum,Province_State==input$name2[i])[,"value"],na.rm=T)
       
     }
-    colnames(summary)=c("Series",subset(df2.sum,Province.State==input$name2[i])[nrow(subset(df2.sum,Province.State==input$name2[i])),"xval"],subset(df2.sum,Province.State==input$name2[i])[nrow(subset(df2.sum,Province.State==input$name2[i]))-1,"xval"],subset(df2.sum,Province.State==input$name2[i])[nrow(subset(df2.sum,Province.State==input$name2[i]))-2,"xval"],"Min","Max","Stdev.")
+    colnames(summary)=c("Series",subset(df2.sum,Province_State==input$name2[i])[nrow(subset(df2.sum,Province_State==input$name2[i])),"xval"],subset(df2.sum,Province_State==input$name2[i])[nrow(subset(df2.sum,Province_State==input$name2[i]))-1,"xval"],subset(df2.sum,Province_State==input$name2[i])[nrow(subset(df2.sum,Province_State==input$name2[i]))-2,"xval"],"Min","Max","Stdev.")
     
     if (as.numeric(max(df2.sum$xval,na.rm=T))>1800){
-      colnames(summary)=c("Series",as.character(as.Date(subset(df2.sum,Province.State==input$name2[i])[nrow(subset(df2.sum,Province.State==input$name2[i])),"xval"])),as.character(as.Date(subset(df2.sum,Province.State==input$name2[i])[nrow(subset(df2.sum,Province.State==input$name2[i]))-1,"xval"])),as.character(as.Date(subset(df2.sum,Province.State==input$name2[i])[nrow(subset(df2.sum,Province.State==input$name2[i]))-2,"xval"])),"Min","Max","Stdev.")
+      colnames(summary)=c("Series",as.character(as.Date(subset(df2.sum,Province_State==input$name2[i])[nrow(subset(df2.sum,Province_State==input$name2[i])),"xval"])),as.character(as.Date(subset(df2.sum,Province_State==input$name2[i])[nrow(subset(df2.sum,Province_State==input$name2[i]))-1,"xval"])),as.character(as.Date(subset(df2.sum,Province_State==input$name2[i])[nrow(subset(df2.sum,Province_State==input$name2[i]))-2,"xval"])),"Min","Max","Stdev.")
     }
     
     
@@ -339,7 +339,7 @@ sandbox.server2 <- function(input, output, session,data2){
   output$corr2 <- renderTable({
     
     df2.corr=data_input2()
-    df2.corr=dcast(df2.corr,xval~variable+Province.State,value.var="value",mean)
+    df2.corr=dcast(df2.corr,xval~variable+Province_State,value.var="value",mean)
     df2.corr1=cor(na.omit(as.matrix(df2.corr[,-c(1)])))
     rownames(df2.corr1)=colnames(df2.corr)[-c(1)]
     df2.corr1
@@ -349,7 +349,7 @@ sandbox.server2 <- function(input, output, session,data2){
   output$table2 <- renderTable({
     df21=data_input2()
     #df21$GameID=as.character(df21$GameID)
-    df21=dcast(df21,xval~variable+Province.State,value.var='value',mean)
+    df21=dcast(df21,xval~variable+Province_State,value.var='value',mean)
     if (max(df21$xval>1000,na.rm=T)){
       df21$xval=as.character(as.Date(df21$xval))
     }

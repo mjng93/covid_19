@@ -44,7 +44,7 @@ sandbox4.UI <- function(id) {
                                  ),
                                  radioButtons(ns("radio"),
                                               label = "Select Data Transformation", 
-                                              choices = c("Levels" = "levels", "Log Levels" = "log", "Change (Daily)" = "diff", "Percent Change (Daily)" = "qoq","Average Daily Percent Change (Rolling, 7-days)"="chg.avg"), #"Percent Change (10-day)" = "mom"
+                                              choices = c("Levels" = "levels", "Log Levels" = "log", "Change (Daily)" = "diff", "Percent Change (Daily)" = "qoq","Average Daily Percent Change (Rolling, 7-days)"="chg.avg","Per Capita"="pc","Per Capita Daily Change"="pc.d","Avg. Per Capita Daily Change (7-day)"="pc.d.avg"), #"Percent Change (10-day)" = "mom"
                                               selected = "levels"),
                                  
                                  selectInput(ns('xchoice'),
@@ -105,7 +105,7 @@ sandbox4.UI <- function(id) {
 
 sandbox.server4 <- function(input, output, session,data4){
   
-  module_data=data4
+  module_data=as.data.frame(data4)
   
 
 #   observe({
@@ -119,7 +119,7 @@ sandbox.server4 <- function(input, output, session,data4){
   data_input_county <- reactive({
     if (input$radio=="levels"){
       module_data.levels=module_data[,c("county.state",input$xchoice,input$ystat)]
-      df <- melt(module_data.levels,id.vars=c(input$xchoice,"county.state"))
+      df <- reshape2::melt(module_data.levels,id.vars=c(input$xchoice,"county.state"))
      # df <- df[df$state %in% input$name,]
       df <- df[df$county.state %in% input$name2,]
       colnames(df)=c("xval","county.state","variable","value")
@@ -132,7 +132,7 @@ sandbox.server4 <- function(input, output, session,data4){
       module_data.pc=module_data[,c("state","state_population",input$xchoice,input$ystat)]
       module_data.pc[,input$ystat]=(module_data.pc[,input$ystat]/module_data.pc[,"state_population"])*100
       module_data.pc$state_population=NULL
-      df <- melt(module_data.pc,id.vars=c(input$xchoice,"state"))
+      df <- reshape2::melt(module_data.pc,id.vars=c(input$xchoice,"state"))
       df <- df[df$state %in% input$name,]
       colnames(df)=c("xval","state","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
@@ -144,7 +144,7 @@ sandbox.server4 <- function(input, output, session,data4){
       module_data.log.pc=module_data[,c("state","state_population",input$xchoice,input$ystat)]
       module_data.log.pc[,input$ystat]=log(1+(module_data.log.pc[,input$ystat]/module_data.log.pc[,"state_population"])*100)
       module_data.log.pc$state_population=NULL
-      df <- melt(module_data.log.pc,id.vars=c(input$xchoice,"state"))
+      df <- reshape2::melt(module_data.log.pc,id.vars=c(input$xchoice,"state"))
       df <- df[df$state %in% input$name,]
       colnames(df)=c("xval","state","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
@@ -156,7 +156,7 @@ sandbox.server4 <- function(input, output, session,data4){
       module_data.total.share=module_data[,c("state","Total Tests",input$xchoice,input$ystat)]
       module_data.total.share[,input$ystat]=(module_data.total.share[,input$ystat]/module_data.total.share[,"Total Tests"])*100
       module_data.total.share[,c("Total Tests")]=NULL
-      df <- melt(module_data.total.share,id.vars=c(input$xchoice,"state"))
+      df <- reshape2::melt(module_data.total.share,id.vars=c(input$xchoice,"state"))
       df <- df[df$state %in% input$name,]
       colnames(df)=c("xval","state","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
@@ -167,7 +167,7 @@ sandbox.server4 <- function(input, output, session,data4){
     if (input$radio=="log"){
       module_data.log=module_data[,c("county.state",input$xchoice,input$ystat)]
       module_data.log[,input$ystat]=log(module_data.log[,input$ystat])
-      df <- melt(module_data.log,id.vars=c(input$xchoice,"county.state"))
+      df <- reshape2::melt(module_data.log,id.vars=c(input$xchoice,"county.state"))
       #df <- df[df$state %in% input$name,]
       df <- df[df$county.state %in% input$name2,]
       colnames(df)=c("xval","county.state","variable","value")
@@ -180,12 +180,12 @@ sandbox.server4 <- function(input, output, session,data4){
     if (input$radio=="qoq"){
       module_data.qoq=module_data[,c("county.state",input$xchoice,input$ystat)]
       
-      module_data.qoq=as.data.frame(group_by(module_data.qoq,county.state) %>% mutate(test=as.numeric(as.vector(Delt(get(input$ystat),k=1)))*100))
+      module_data.qoq=as.data.table(group_by(module_data.qoq,county.state) %>% mutate(test=as.numeric(as.vector(Delt(get(input$ystat),k=1)))*100))
       
       module_data.qoq[,input$ystat]=module_data.qoq[,c("test")]
       module_data.qoq=subset(module_data.qoq,select=-c(test))
       
-      df <- melt(module_data.qoq,id.vars=c(input$xchoice,"county.state"))
+      df <- reshape2::melt(module_data.qoq,id.vars=c(input$xchoice,"county.state"))
       #df <- df[df$state %in% input$name,]
       df <- df[df$county.state %in% input$name2,]
       colnames(df)=c("xval","county.state","variable","value")
@@ -199,13 +199,13 @@ sandbox.server4 <- function(input, output, session,data4){
       module_data.diff=module_data[,c("county.state",input$xchoice,input$ystat)]
       
       
-      module_data.diff=as.data.frame(group_by(module_data.diff,county.state) %>% mutate(test=as.numeric(as.vector(c(NA,diff(get(input$ystat),lag=1))))))
+      module_data.diff=as.data.table(group_by(module_data.diff,county.state) %>% mutate(test=as.numeric(as.vector(c(NA,diff(get(input$ystat),lag=1))))))
       
       module_data.diff[,input$ystat]=module_data.diff[,c("test")]
       module_data.diff=subset(module_data.diff,select=-c(test))
       
       
-      df <- melt(module_data.diff,id.vars=c(input$xchoice,"county.state"))
+      df <- reshape2::melt(module_data.diff,id.vars=c(input$xchoice,"county.state"))
       #df <- df[df$state %in% input$name,]
       df <- df[df$county.state %in% input$name2,]
       colnames(df)=c("xval","county.state","variable","value")
@@ -218,12 +218,12 @@ sandbox.server4 <- function(input, output, session,data4){
     if (input$radio=="mom"){
       module_data.mom=module_data[,c("county.state",input$xchoice,input$ystat)]
       
-      module_data.mom=as.data.frame(group_by(module_data.mom,state) %>% mutate(test=as.numeric(as.vector(Delt(get(input$ystat),k=7)))*100))
+      module_data.mom=as.data.table(group_by(module_data.mom,state) %>% mutate(test=as.numeric(as.vector(Delt(get(input$ystat),k=7)))*100))
       
       module_data.mom[,input$ystat]=module_data.mom[,c("test")]
       module_data.mom$test=NULL
       
-      df <- melt(module_data.mom,id.vars=c(input$xchoice,"state"))
+      df <- reshape2::melt(module_data.mom,id.vars=c(input$xchoice,"state"))
       df <- df[df$state %in% input$name,]
       colnames(df)=c("xval","state","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
@@ -236,12 +236,12 @@ sandbox.server4 <- function(input, output, session,data4){
     if (input$radio=="chg.avg"){
       module_data.chg.avg=module_data[,c("county.state",input$xchoice,input$ystat)]
       
-      module_data.chg.avg=as.data.frame(group_by(module_data.chg.avg,county.state) %>% mutate(test=rollapply(as.numeric(as.vector(Delt(get(input$ystat),k=1)))*100,width=7,mean,fill=NA,align="right")))
+      module_data.chg.avg=as.data.table(group_by(module_data.chg.avg,county.state) %>% mutate(test=rollapply(as.numeric(as.vector(Delt(get(input$ystat),k=1)))*100,width=7,mean,fill=NA,align="right")))
       
       module_data.chg.avg[,input$ystat]=module_data.chg.avg[,c("test")]
       module_data.chg.avg=subset(module_data.chg.avg,select=-c(test))
       
-      df <- melt(module_data.chg.avg,id.vars=c(input$xchoice,"county.state"))
+      df <- reshape2::melt(module_data.chg.avg,id.vars=c(input$xchoice,"county.state"))
       #df <- df[df$state %in% input$name,]
       df <- df[df$county.state %in% input$name2,]
       colnames(df)=c("xval","county.state","variable","value")
@@ -250,6 +250,49 @@ sandbox.server4 <- function(input, output, session,data4){
       
       units="Percent Change"
     }
+    
+    if (input$radio=="pc"){
+      module_data.pc=module_data[,c("county.state","population",input$xchoice,input$ystat)]
+      module_data.pc[,input$ystat]=(module_data.pc[,input$ystat]/module_data.pc[,"population"])*100
+      module_data.pc$population=NULL
+      df <- reshape2::melt(module_data.pc,id.vars=c(input$xchoice,"county.state"))
+      df <- df[df$county.state %in% input$name2,]
+      colnames(df)=c("xval","county.state","variable","value")
+      df$value <- as.numeric(gsub(Inf,NA,df$value))
+      df$value <- as.numeric(gsub(-Inf,NA,df$value))
+      units="Percent"
+    }
+    
+    if (input$radio=="pc.d"){
+      module_data.pc.d=module_data[,c("county.state","population",input$xchoice,input$ystat)]
+      module_data.pc.d[,input$ystat]=(module_data.pc.d[,input$ystat]/module_data.pc.d[,"population"])*100
+      module_data.pc.d=as.data.table(group_by(module_data.pc.d,county.state) %>% mutate(test=as.numeric(as.vector(c(NA,diff(get(input$ystat),lag=1))))))
+      module_data.pc.d[,input$ystat]=module_data.pc.d[,c("test")]
+      module_data.pc.d=subset(module_data.pc.d,select=-c(test,population))
+      df <- reshape2::melt(module_data.pc.d,id.vars=c(input$xchoice,"county.state"))
+      df <- df[df$county.state %in% input$name2,]
+      colnames(df)=c("xval","county.state","variable","value")
+      df$value <- as.numeric(gsub(Inf,NA,df$value))
+      df$value <- as.numeric(gsub(-Inf,NA,df$value))
+      units="Percentage Points"
+    }
+    
+    if (input$radio=="pc.d.avg"){
+      module_data.pc.d.avg=module_data[,c("county.state","population",input$xchoice,input$ystat)]
+      module_data.pc.d.avg[,input$ystat]=(module_data.pc.d.avg[,input$ystat]/module_data.pc.d.avg[,"population"])*100
+      module_data.pc.d.avg=as.data.table(group_by(module_data.pc.d.avg,county.state) %>% mutate(test=rollapply(as.numeric(as.vector(c(NA,diff(get(input$ystat),lag=1)))),width=7,mean,fill=NA,align="right")))
+      
+      module_data.pc.d.avg[,input$ystat]=module_data.pc.d.avg[,c("test")]
+      module_data.pc.d.avg=subset(module_data.pc.d.avg,select=-c(test,population))
+      
+      df <- reshape2::melt(module_data.pc.d.avg,id.vars=c(input$xchoice,"county.state"))
+      df <- df[df$county.state %in% input$name2,]
+      colnames(df)=c("xval","county.state","variable","value")
+      df$value <- as.numeric(gsub(Inf,NA,df$value))
+      df$value <- as.numeric(gsub(-Inf,NA,df$value))
+      units="Percentage Points"
+    }
+    
     
     # if (input$xval=="Since 1st Case" | input$xval=="Since 100th Case" | input$xval=="Since 10th Death"){
     #   df=df[df$xval>=-1,]

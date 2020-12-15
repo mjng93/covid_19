@@ -53,7 +53,7 @@ sandbox.UI <- function(id) {
                                  ),
                                  selectInput(ns("name"),
                                              label = "Select country:",
-                                             choices = c(unique(covid.agg$Country.Region)),
+                                             choices = c(unique(covid.agg$Country_Region)),
                                              selected = c("US","Italy","Germany","France","Spain","China","Korea, South","Iran","United Kingdom"),
                                              multiple = TRUE
                                  ),
@@ -103,79 +103,79 @@ sandbox.UI <- function(id) {
 
 sandbox.server <- function(input, output, session,data){
   
-  module_data=data
+  module_data=as.data.frame(data)
   
   data_input <- reactive({
     if (input$radio=="levels"){
-      module_data.levels=module_data[,c("Country.Region",input$xchoice,input$ystat)]
-      df <- melt(module_data.levels,id.vars=c(input$xchoice,"Country.Region"))
-      df <- df[df$Country.Region %in% input$name,]
-      colnames(df)=c("xval","Country.Region","variable","value")
+      module_data.levels=module_data[,c("Country_Region",input$xchoice,input$ystat)]
+      df <- reshape2::melt(module_data.levels,id.vars=c(input$xchoice,"Country_Region"))
+      df <- df[df$Country_Region %in% input$name,]
+      colnames(df)=c("xval","Country_Region","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
       units="Levels"
     }
     
     if (input$radio=="pc"){
-      module_data.pc=module_data[,c("Country.Region","Population",input$xchoice,input$ystat)]
+      module_data.pc=module_data[,c("Country_Region","Population",input$xchoice,input$ystat)]
       module_data.pc[,input$ystat]=(module_data.pc[,input$ystat]/module_data.pc[,"Population"])*100
       module_data.pc$Population=NULL
-      df <- melt(module_data.pc,id.vars=c(input$xchoice,"Country.Region"))
-      df <- df[df$Country.Region %in% input$name,]
-      colnames(df)=c("xval","Country.Region","variable","value")
+      df <- reshape2::melt(module_data.pc,id.vars=c(input$xchoice,"Country_Region"))
+      df <- df[df$Country_Region %in% input$name,]
+      colnames(df)=c("xval","Country_Region","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
       units="Percent"
     }
     
     if (input$radio=="log.pc"){
-      module_data.log.pc=module_data[,c("Country.Region","Population",input$xchoice,input$ystat)]
+      module_data.log.pc=module_data[,c("Country_Region","Population",input$xchoice,input$ystat)]
       module_data.log.pc[,input$ystat]=log(1+(module_data.log.pc[,input$ystat]/module_data.log.pc[,"Population"])*100)
       module_data.log.pc$Population=NULL
-      df <- melt(module_data.log.pc,id.vars=c(input$xchoice,"Country.Region"))
-      df <- df[df$Country.Region %in% input$name,]
-      colnames(df)=c("xval","Country.Region","variable","value")
+      df <- reshape2::melt(module_data.log.pc,id.vars=c(input$xchoice,"Country_Region"))
+      df <- df[df$Country_Region %in% input$name,]
+      colnames(df)=c("xval","Country_Region","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
       units="Percent"
     }
     
     if (input$radio=="log"){
-      module_data.log=module_data[,c("Country.Region",input$xchoice,input$ystat)]
+      module_data.log=module_data[,c("Country_Region",input$xchoice,input$ystat)]
       module_data.log[,input$ystat]=log(module_data.log[,input$ystat])
-      df <- melt(module_data.log,id.vars=c(input$xchoice,"Country.Region"))
-      df <- df[df$Country.Region %in% input$name,]
-      colnames(df)=c("xval","Country.Region","variable","value")
+      df <- reshape2::melt(module_data.log,id.vars=c(input$xchoice,"Country_Region"))
+      df <- df[df$Country_Region %in% input$name,]
+      colnames(df)=c("xval","Country_Region","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
       units="Log Level"
     }
     
     if (input$radio=="pc.d"){
-      module_data.pc.d=module_data[,c("Country.Region","Population",input$xchoice,input$ystat)]
+      module_data.pc.d=module_data[,c("Country_Region","Population",input$xchoice,input$ystat)]
       module_data.pc.d[,input$ystat]=(module_data.pc.d[,input$ystat]/module_data.pc.d[,"Population"])*100
-      module_data.pc.d=as.data.frame(group_by(module_data.pc.d,Country.Region) %>% mutate(test=as.numeric(as.vector(c(NA,diff(get(input$ystat),lag=1))))))
+      module_data.pc.d=as.data.frame(group_by(module_data.pc.d,Country_Region) %>% mutate(test=as.numeric(as.vector(c(NA,diff(get(input$ystat),lag=1))))))
       module_data.pc.d[,input$ystat]=module_data.pc.d[,c("test")]
       module_data.pc.d=subset(module_data.pc.d,select=-c(test,Population))
-      df <- melt(module_data.pc.d,id.vars=c(input$xchoice,"Country.Region"))
-      df <- df[df$Country.Region %in% input$name,]
-      colnames(df)=c("xval","Country.Region","variable","value")
+      df <- reshape2::melt(module_data.pc.d,id.vars=c(input$xchoice,"Country_Region"))
+      df <- df[df$Country_Region %in% input$name,]
+      colnames(df)=c("xval","Country_Region","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
       units="Percentage Points"
     }
     
     if (input$radio=="pc.d.avg"){
-      module_data.pc.d.avg=module_data[,c("Country.Region","Population",input$xchoice,input$ystat)]
+      module_data.pc.d.avg=module_data[,c("Country_Region","Population",input$xchoice,input$ystat)]
       module_data.pc.d.avg[,input$ystat]=(module_data.pc.d.avg[,input$ystat]/module_data.pc.d.avg[,"Population"])*100
-      module_data.pc.d.avg=as.data.frame(group_by(module_data.pc.d.avg,Country.Region) %>% mutate(test=rollapply(as.numeric(as.vector(c(NA,diff(get(input$ystat),lag=1)))),width=7,mean,fill=NA,align="right")))
+      module_data.pc.d.avg=as.data.frame(group_by(module_data.pc.d.avg,Country_Region) %>% mutate(test=rollapply(as.numeric(as.vector(c(NA,diff(get(input$ystat),lag=1)))),width=7,mean,fill=NA,align="right")))
       
       module_data.pc.d.avg[,input$ystat]=module_data.pc.d.avg[,c("test")]
       module_data.pc.d.avg=subset(module_data.pc.d.avg,select=-c(test,Population))
       
-      df <- melt(module_data.pc.d.avg,id.vars=c(input$xchoice,"Country.Region"))
-      df <- df[df$Country.Region %in% input$name,]
-      colnames(df)=c("xval","Country.Region","variable","value")
+      df <- reshape2::melt(module_data.pc.d.avg,id.vars=c(input$xchoice,"Country_Region"))
+      df <- df[df$Country_Region %in% input$name,]
+      colnames(df)=c("xval","Country_Region","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
       units="Percentage Points"
@@ -183,18 +183,18 @@ sandbox.server <- function(input, output, session,data){
     
     
     if (input$radio=="qoq"){
-      module_data.qoq=module_data[,c("Country.Region",input$xchoice,input$ystat)]
+      module_data.qoq=module_data[,c("Country_Region",input$xchoice,input$ystat)]
       
       
-      module_data.qoq=as.data.frame(group_by(module_data.qoq,Country.Region) %>% mutate(test=as.numeric(as.vector(Delt(get(input$ystat),k=1)))*100))
+      module_data.qoq=as.data.frame(group_by(module_data.qoq,Country_Region) %>% mutate(test=as.numeric(as.vector(Delt(get(input$ystat),k=1)))*100))
       
       module_data.qoq[,input$ystat]=module_data.qoq[,c("test")]
       module_data.qoq=subset(module_data.qoq,select=-c(test))
       
       
-      df <- melt(module_data.qoq,id.vars=c(input$xchoice,"Country.Region"))
-      df <- df[df$Country.Region %in% input$name,]
-      colnames(df)=c("xval","Country.Region","variable","value")
+      df <- reshape2::melt(module_data.qoq,id.vars=c(input$xchoice,"Country_Region"))
+      df <- df[df$Country_Region %in% input$name,]
+      colnames(df)=c("xval","Country_Region","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
         units="Percent Change"
@@ -202,18 +202,18 @@ sandbox.server <- function(input, output, session,data){
     
     if (input$radio=="diff"){
       
-      module_data.diff=module_data[,c("Country.Region",input$xchoice,input$ystat)]
+      module_data.diff=module_data[,c("Country_Region",input$xchoice,input$ystat)]
      
     
-      module_data.diff=as.data.frame(group_by(module_data.diff,Country.Region) %>% mutate(test=as.numeric(as.vector(c(NA,diff(get(input$ystat),lag=1))))))
+      module_data.diff=as.data.frame(group_by(module_data.diff,Country_Region) %>% mutate(test=as.numeric(as.vector(c(NA,diff(get(input$ystat),lag=1))))))
       
       module_data.diff[,input$ystat]=module_data.diff[,c("test")]
       module_data.diff=subset(module_data.diff,select=-c(test))
     
       
-      df <- melt(module_data.diff,id.vars=c(input$xchoice,"Country.Region"))
-      df <- df[df$Country.Region %in% input$name,]
-      colnames(df)=c("xval","Country.Region","variable","value")
+      df <- reshape2::melt(module_data.diff,id.vars=c(input$xchoice,"Country_Region"))
+      df <- df[df$Country_Region %in% input$name,]
+      colnames(df)=c("xval","Country_Region","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
       units="New Cases"
@@ -221,16 +221,16 @@ sandbox.server <- function(input, output, session,data){
     }
     
     if (input$radio=="mom"){
-      module_data.mom=module_data[,c("Country.Region",input$xchoice,input$ystat)]
+      module_data.mom=module_data[,c("Country_Region",input$xchoice,input$ystat)]
       
-      module_data.mom=as.data.frame(group_by(module_data.mom,Country.Region) %>% mutate(test=as.numeric(as.vector(Delt(get(input$ystat),k=7)))*100))
+      module_data.mom=as.data.frame(group_by(module_data.mom,Country_Region) %>% mutate(test=as.numeric(as.vector(Delt(get(input$ystat),k=7)))*100))
       
       module_data.mom[,input$ystat]=module_data.mom[,c("test")]
       module_data.mom$test=NULL
       
-      df <- melt(module_data.mom,id.vars=c(input$xchoice,"Country.Region"))
-      df <- df[df$Country.Region %in% input$name,]
-      colnames(df)=c("xval","Country.Region","variable","value")
+      df <- reshape2::melt(module_data.mom,id.vars=c(input$xchoice,"Country_Region"))
+      df <- df[df$Country_Region %in% input$name,]
+      colnames(df)=c("xval","Country_Region","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
       print(tail(df))
@@ -239,16 +239,16 @@ sandbox.server <- function(input, output, session,data){
     }
     
     if (input$radio=="chg.avg"){
-      module_data.chg.avg=module_data[,c("Country.Region",input$xchoice,input$ystat)]
+      module_data.chg.avg=module_data[,c("Country_Region",input$xchoice,input$ystat)]
       
-      module_data.chg.avg=as.data.frame(group_by(module_data.chg.avg,Country.Region) %>% mutate(test=rollapply(as.numeric(as.vector(Delt(get(input$ystat),k=1)))*100,width=7,mean,fill=NA,align="right")))
+      module_data.chg.avg=as.data.frame(group_by(module_data.chg.avg,Country_Region) %>% mutate(test=rollapply(as.numeric(as.vector(Delt(get(input$ystat),k=1)))*100,width=7,mean,fill=NA,align="right")))
       
       module_data.chg.avg[,input$ystat]=module_data.chg.avg[,c("test")]
       module_data.chg.avg=subset(module_data.chg.avg,select=-c(test))
       
-      df <- melt(module_data.chg.avg,id.vars=c(input$xchoice,"Country.Region"))
-      df <- df[df$Country.Region %in% input$name,]
-      colnames(df)=c("xval","Country.Region","variable","value")
+      df <- reshape2::melt(module_data.chg.avg,id.vars=c(input$xchoice,"Country_Region"))
+      df <- df[df$Country_Region %in% input$name,]
+      colnames(df)=c("xval","Country_Region","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
       df$value <- as.numeric(gsub(-Inf,NA,df$value))
       
@@ -287,14 +287,14 @@ sandbox.server <- function(input, output, session,data){
     }
     
     if (input$chart_type=="line"){
-    plot_ly(plot.data, x = ~xval,y= ~value, color = ~Country.Region, type = 'scatter', mode = 'lines') %>%
+    plot_ly(plot.data, x = ~xval,y= ~value, color = ~Country_Region, type = 'scatter', mode = 'lines') %>%
       layout(title = input$ystat,
              xaxis = list(title = "Days"),
              yaxis = list (title = unit_input()))
     }
     
     else if (input$chart_type=="bar"){
-      plot_ly(plot.data, x = ~xval,y= ~value, color = ~Country.Region, type = 'bar') %>%
+      plot_ly(plot.data, x = ~xval,y= ~value, color = ~Country_Region, type = 'bar') %>%
         layout(title = input$ystat,
                xaxis = list(title = "Days"),
                yaxis = list (title = unit_input()))
@@ -317,18 +317,18 @@ sandbox.server <- function(input, output, session,data){
     
     for (i in 1:length(input$name)){
       summary[i,'series']=input$name[i]
-      summary[i,'l1']=subset(df.sum,Country.Region==input$name[i])[nrow(subset(df.sum,Country.Region==input$name[i])),"value"]
-      summary[i,'l2']=subset(df.sum,Country.Region==input$name[i])[nrow(subset(df.sum,Country.Region==input$name[i]))-1,"value"]
-      summary[i,'l3']=subset(df.sum,Country.Region==input$name[i])[nrow(subset(df.sum,Country.Region==input$name[i]))-2,"value"]
-      summary[i,'min']=min(subset(df.sum,Country.Region==input$name[i])[,"value"],na.rm=T)
-      summary[i,'max']=max(subset(df.sum,Country.Region==input$name[i])[,"value"],na.rm=T)
-      summary[i,'sd']=sd(subset(df.sum,Country.Region==input$name[i])[,"value"],na.rm=T)
+      summary[i,'l1']=subset(df.sum,Country_Region==input$name[i])[nrow(subset(df.sum,Country_Region==input$name[i])),"value"]
+      summary[i,'l2']=subset(df.sum,Country_Region==input$name[i])[nrow(subset(df.sum,Country_Region==input$name[i]))-1,"value"]
+      summary[i,'l3']=subset(df.sum,Country_Region==input$name[i])[nrow(subset(df.sum,Country_Region==input$name[i]))-2,"value"]
+      summary[i,'min']=min(subset(df.sum,Country_Region==input$name[i])[,"value"],na.rm=T)
+      summary[i,'max']=max(subset(df.sum,Country_Region==input$name[i])[,"value"],na.rm=T)
+      summary[i,'sd']=sd(subset(df.sum,Country_Region==input$name[i])[,"value"],na.rm=T)
      
     }
-    colnames(summary)=c("Series",subset(df.sum,Country.Region==input$name[i])[nrow(subset(df.sum,Country.Region==input$name[i])),"xval"],subset(df.sum,Country.Region==input$name[i])[nrow(subset(df.sum,Country.Region==input$name[i]))-1,"xval"],subset(df.sum,Country.Region==input$name[i])[nrow(subset(df.sum,Country.Region==input$name[i]))-2,"xval"],"Min","Max","Stdev.")
+    colnames(summary)=c("Series",subset(df.sum,Country_Region==input$name[i])[nrow(subset(df.sum,Country_Region==input$name[i])),"xval"],subset(df.sum,Country_Region==input$name[i])[nrow(subset(df.sum,Country_Region==input$name[i]))-1,"xval"],subset(df.sum,Country_Region==input$name[i])[nrow(subset(df.sum,Country_Region==input$name[i]))-2,"xval"],"Min","Max","Stdev.")
     
     if (as.numeric(max(df.sum$xval,na.rm=T))>1800){
-      colnames(summary)=c("Series",as.character(as.Date(subset(df.sum,Country.Region==input$name[i])[nrow(subset(df.sum,Country.Region==input$name[i])),"xval"])),as.character(as.Date(subset(df.sum,Country.Region==input$name[i])[nrow(subset(df.sum,Country.Region==input$name[i]))-1,"xval"])),as.character(as.Date(subset(df.sum,Country.Region==input$name[i])[nrow(subset(df.sum,Country.Region==input$name[i]))-2,"xval"])),"Min","Max","Stdev.")
+      colnames(summary)=c("Series",as.character(as.Date(subset(df.sum,Country_Region==input$name[i])[nrow(subset(df.sum,Country_Region==input$name[i])),"xval"])),as.character(as.Date(subset(df.sum,Country_Region==input$name[i])[nrow(subset(df.sum,Country_Region==input$name[i]))-1,"xval"])),as.character(as.Date(subset(df.sum,Country_Region==input$name[i])[nrow(subset(df.sum,Country_Region==input$name[i]))-2,"xval"])),"Min","Max","Stdev.")
     }
     
     #colnames(summary)[1:4]=c("Series",as.Date(df.sum[nrow(df.sum),"date"]),df.sum[nrow(df.sum)-1,"date"],df.sum[nrow(df.sum)-2,"date"])
@@ -342,7 +342,7 @@ sandbox.server <- function(input, output, session,data){
   output$corr <- renderTable({
     
     df.corr=data_input()
-    df.corr=dcast(df.corr,xval~variable+Country.Region,value.var="value",mean)
+    df.corr=dcast(df.corr,xval~variable+Country_Region,value.var="value",mean)
     df.corr1=cor(na.omit(as.matrix(df.corr[,-c(1)])))
     rownames(df.corr1)=colnames(df.corr)[-c(1)]
     df.corr1
@@ -352,7 +352,7 @@ sandbox.server <- function(input, output, session,data){
   output$table <- renderTable({
     df1=data_input()
     #df1$GameID=as.character(df1$GameID)
-    df1=dcast(df1,xval~variable+Country.Region,value.var='value',mean)
+    df1=dcast(df1,xval~variable+Country_Region,value.var='value',mean)
     if (max(df1$xval>1000,na.rm=T)){
       df1$xval=as.character(as.Date(df1$xval))
     }

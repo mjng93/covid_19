@@ -36,16 +36,16 @@ sandbox3.UI <- function(id) {
                                  radioButtons(ns("chart_type"),
                                               label = "Select Chart Type", 
                                               choices = c("Bar Chart" = "bar","Line Chart"="line"),
-                                              selected = "bar"),
+                                              selected = "line"),
                                  selectInput(ns('ystat'),
                                              label = 'Select statistic',
-                                             choices=c("Positive Tests","Negative Tests","Pending Tests","Hospitalized Cases","Deaths","Total Tests"),
-                                             selected="Total Tests"
+                                             choices=c("Positive Tests","Negative Tests","Pending Tests","Hospitalized Cases","Deaths","Total Tests - Encounters","Total Tests - People"),
+                                             selected="Total Tests - Encounters"
                                  ),
                                  radioButtons(ns("radio"),
                                               label = "Select Data Transformation", 
-                                              choices = c("Levels" = "levels","Share of Total Tests"="total.share","Per Capita Levels" = "pc","Per Capita Daily Change"="pc.d","Average Per Capita Daily Change (Rolling, 7-days)"="pc.d.avg", "Log Levels" = "log", "Change (Daily)" = "diff", "Percent Change (Daily)" = "qoq","Average Daily Percent Change (Rolling, 7-days)"="chg.avg"), #"Percent Change (10-day)" = "mom"
-                                              selected = "diff"),
+                                              choices = c("Levels" = "levels","Rolling Average (7-day)"="levels.avg","Per Capita Levels" = "pc","Per Capita Daily Change"="pc.d","Average Per Capita Daily Change (Rolling, 7-days)"="pc.d.avg", "Log Levels" = "log", "Change (Daily)" = "diff", "Percent Change (Daily)" = "qoq","Average Daily Percent Change (Rolling, 7-days)"="chg.avg"), #"Percent Change (10-day)" = "mom"
+                                              selected = "pc.d.avg"),
                                  
                                  selectInput(ns('xchoice'),
                                              label = 'Select time horizon',
@@ -100,12 +100,23 @@ sandbox3.UI <- function(id) {
 
 sandbox.server3 <- function(input, output, session,data3){
   
-  module_data=data3
+  module_data=as.data.frame(data3)
   
   data_input_tests <- reactive({
     if (input$radio=="levels"){
       module_data.levels=module_data[,c("state",input$xchoice,input$ystat)]
-      df <- melt(module_data.levels,id.vars=c(input$xchoice,"state"))
+      df <- reshape2::melt(module_data.levels,id.vars=c(input$xchoice,"state"))
+      df <- df[df$state %in% input$name,]
+      colnames(df)=c("xval","state","variable","value")
+      df$value <- as.numeric(gsub(Inf,NA,df$value))
+      df$value <- as.numeric(gsub(-Inf,NA,df$value))
+      units="Levels"
+    }
+    
+    if (input$radio=="levels.avg"){
+      module_data.levels.avg=module_data[,c("state",input$xchoice,input$ystat)]
+      module_data.levels.avg[,input$ystat]=as.numeric(as.vector(zoo::rollapply(module_data.levels.avg[,input$ystat],width=7,mean,fill=NA,align="right")))
+      df <- reshape2::melt(module_data.levels.avg,id.vars=c(input$xchoice,"state"))
       df <- df[df$state %in% input$name,]
       colnames(df)=c("xval","state","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
@@ -117,7 +128,7 @@ sandbox.server3 <- function(input, output, session,data3){
       module_data.pc=module_data[,c("state","state_population",input$xchoice,input$ystat)]
       module_data.pc[,input$ystat]=(module_data.pc[,input$ystat]/module_data.pc[,"state_population"])*100
       module_data.pc$state_population=NULL
-      df <- melt(module_data.pc,id.vars=c(input$xchoice,"state"))
+      df <- reshape2::melt(module_data.pc,id.vars=c(input$xchoice,"state"))
       df <- df[df$state %in% input$name,]
       colnames(df)=c("xval","state","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
@@ -129,7 +140,7 @@ sandbox.server3 <- function(input, output, session,data3){
       module_data.log.pc=module_data[,c("state","state_population",input$xchoice,input$ystat)]
       module_data.log.pc[,input$ystat]=log(1+(module_data.log.pc[,input$ystat]/module_data.log.pc[,"state_population"])*100)
       module_data.log.pc$state_population=NULL
-      df <- melt(module_data.log.pc,id.vars=c(input$xchoice,"state"))
+      df <- reshape2::melt(module_data.log.pc,id.vars=c(input$xchoice,"state"))
       df <- df[df$state %in% input$name,]
       colnames(df)=c("xval","state","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
@@ -138,10 +149,51 @@ sandbox.server3 <- function(input, output, session,data3){
     }
     
     if (input$radio=="total.share"){
-      module_data.total.share=module_data[,c("state","Total Tests",input$xchoice,input$ystat)]
-      module_data.total.share[,input$ystat]=(module_data.total.share[,input$ystat]/module_data.total.share[,"Total Tests"])*100
-      module_data.total.share[,c("Total Tests")]=NULL
-      df <- melt(module_data.total.share,id.vars=c(input$xchoice,"state"))
+      module_data.total.share=module_data[,c("state","Total Tests - Encounters",input$xchoice,input$ystat)]
+      module_data.total.share[,input$ystat]=(module_data.total.share[,input$ystat]/module_data.total.share[,"Total Tests - Encounters"])*100
+      module_data.total.share[,c("Total Tests - Encounters")]=NULL
+      df <- reshape2::melt(module_data.total.share,id.vars=c(input$xchoice,"state"))
+      df <- df[df$state %in% input$name,]
+      colnames(df)=c("xval","state","variable","value")
+      df$value <- as.numeric(gsub(Inf,NA,df$value))
+      df$value <- as.numeric(gsub(-Inf,NA,df$value))
+      units="Percent"
+    }
+    
+    if (input$radio=="total.share.new"){
+      
+      module_data.total.share.new=module_data[,c("state","Total Tests - Encounters",input$xchoice,input$ystat)]
+      
+      module_data.total.share.new=as.data.frame(group_by(module_data.total.share.new,state) %>% mutate(totals=as.numeric(as.vector(c(NA,diff(`Total Tests - Encounters`,lag=1))))))
+      
+      
+      module_data.total.share.new[,"Total Tests - Encounters"]=module_data.total.share.new[,c("totals")]
+      module_data.total.share.new=subset(module_data.total.share.new,select=-c(totals))
+      module_data.total.share.new[,input$ystat]=(module_data.total.share.new[,input$ystat]/module_data.total.share.new[,"Total Tests - Encounters"])*100
+      module_data.total.share.new[,c("Total Tests - Encounters")]=NULL
+      df <- reshape2::melt(module_data.total.share.new,id.vars=c(input$xchoice,"state"))
+      df <- df[df$state %in% input$name,]
+      colnames(df)=c("xval","state","variable","value")
+      df$value <- as.numeric(gsub(Inf,NA,df$value))
+      df$value <- as.numeric(gsub(-Inf,NA,df$value))
+      units="Percent"
+    }
+    
+    if (input$radio=="total.share.new.avg"){
+      
+      module_data.total.share.new=module_data[,c("state","Total Tests - Encounters",input$xchoice,input$ystat)]
+      
+      module_data.total.share.new=as.data.frame(group_by(module_data.total.share.new,state) %>% mutate(totals=as.numeric(as.vector(c(NA,diff(`Total Tests - Encounters`,lag=1))))))
+      
+      
+      module_data.total.share.new[,"Total Tests - Encounters"]=module_data.total.share.new[,c("totals")]
+      module_data.total.share.new=subset(module_data.total.share.new,select=-c(totals))
+      module_data.total.share.new[,input$ystat]=(module_data.total.share.new[,input$ystat]/module_data.total.share.new[,"Total Tests - Encounters"])*100
+      
+      module_data.total.share.new[,input$ystat]=as.numeric(as.vector(zoo::rollapply(module_data.total.share.new[,input$ystat],width=7,mean,fill=NA,align="right")))
+      
+      module_data.total.share.new[,c("Total Tests - Encounters")]=NULL
+      df <- reshape2::melt(module_data.total.share.new,id.vars=c(input$xchoice,"state"))
       df <- df[df$state %in% input$name,]
       colnames(df)=c("xval","state","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
@@ -152,7 +204,7 @@ sandbox.server3 <- function(input, output, session,data3){
     if (input$radio=="log"){
       module_data.log=module_data[,c("state",input$xchoice,input$ystat)]
       module_data.log[,input$ystat]=log(module_data.log[,input$ystat])
-      df <- melt(module_data.log,id.vars=c(input$xchoice,"state"))
+      df <- reshape2::melt(module_data.log,id.vars=c(input$xchoice,"state"))
       df <- df[df$state %in% input$name,]
       colnames(df)=c("xval","state","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
@@ -166,7 +218,7 @@ sandbox.server3 <- function(input, output, session,data3){
       module_data.pc.d=as.data.frame(group_by(module_data.pc.d,state) %>% mutate(test=as.numeric(as.vector(c(NA,diff(get(input$ystat),lag=1))))))
       module_data.pc.d[,input$ystat]=module_data.pc.d[,c("test")]
       module_data.pc.d=subset(module_data.pc.d,select=-c(test,state_population))
-      df <- melt(module_data.pc.d,id.vars=c(input$xchoice,"state"))
+      df <- reshape2::melt(module_data.pc.d,id.vars=c(input$xchoice,"state"))
       df <- df[df$state %in% input$name,]
       colnames(df)=c("xval","state","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
@@ -182,7 +234,7 @@ sandbox.server3 <- function(input, output, session,data3){
       module_data.pc.d.avg[,input$ystat]=module_data.pc.d.avg[,c("test")]
       module_data.pc.d.avg=subset(module_data.pc.d.avg,select=-c(test,state_population))
       
-      df <- melt(module_data.pc.d.avg,id.vars=c(input$xchoice,"state"))
+      df <- reshape2::melt(module_data.pc.d.avg,id.vars=c(input$xchoice,"state"))
       df <- df[df$state %in% input$name,]
       colnames(df)=c("xval","state","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
@@ -199,7 +251,7 @@ sandbox.server3 <- function(input, output, session,data3){
       module_data.qoq[,input$ystat]=module_data.qoq[,c("test")]
       module_data.qoq=subset(module_data.qoq,select=-c(test))
       
-      df <- melt(module_data.qoq,id.vars=c(input$xchoice,"state"))
+      df <- reshape2::melt(module_data.qoq,id.vars=c(input$xchoice,"state"))
       df <- df[df$state %in% input$name,]
       colnames(df)=c("xval","state","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
@@ -218,7 +270,7 @@ sandbox.server3 <- function(input, output, session,data3){
       module_data.diff=subset(module_data.diff,select=-c(test))
       
       
-      df <- melt(module_data.diff,id.vars=c(input$xchoice,"state"))
+      df <- reshape2::melt(module_data.diff,id.vars=c(input$xchoice,"state"))
       df <- df[df$state %in% input$name,]
       colnames(df)=c("xval","state","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
@@ -235,7 +287,7 @@ sandbox.server3 <- function(input, output, session,data3){
       module_data.mom[,input$ystat]=module_data.mom[,c("test")]
       module_data.mom$test=NULL
       
-      df <- melt(module_data.mom,id.vars=c(input$xchoice,"state"))
+      df <- reshape2::melt(module_data.mom,id.vars=c(input$xchoice,"state"))
       df <- df[df$state %in% input$name,]
       colnames(df)=c("xval","state","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
@@ -253,7 +305,7 @@ sandbox.server3 <- function(input, output, session,data3){
       module_data.chg.avg[,input$ystat]=module_data.chg.avg[,c("test")]
       module_data.chg.avg=subset(module_data.chg.avg,select=-c(test))
       
-      df <- melt(module_data.chg.avg,id.vars=c(input$xchoice,"state"))
+      df <- reshape2::melt(module_data.chg.avg,id.vars=c(input$xchoice,"state"))
       df <- df[df$state %in% input$name,]
       colnames(df)=c("xval","state","variable","value")
       df$value <- as.numeric(gsub(Inf,NA,df$value))
@@ -274,6 +326,7 @@ sandbox.server3 <- function(input, output, session,data3){
     if (input$radio=="levels"){units="Total Cumulative"}
     if (input$radio=="pc"){units="Percent (1=1%)"}
     if (input$radio=="total.share"){units="Percent (1=1%)"}
+    if (input$radio=="total.share.new"){units="Percent (1=1%)"}
     if (input$radio=="log.pc"){units="Log Points: computed as log(1 + Per Capita Level in decimals)"}
     if (input$radio=="log"){units="Log Points"}
     if (input$radio=="diff"){units="New Tests"}
