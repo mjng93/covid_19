@@ -1,12 +1,15 @@
 rm(list=ls())
 library(ggplot2)
-library(dplyr)
 library(tidyr)
+library(dplyr)
 library(RColorBrewer)
 library(reshape2)
 library(zoo)
 library(gridExtra)
 library(data.table)
+library(lobstr)
+
+print(mem_used()/1000000000)
 
 Sys.setenv(TZ="America/Chicago")
 
@@ -38,6 +41,10 @@ covid=merge(confirmed,deaths,by=c("Province/State","Country/Region","Observation
 covid=merge(covid,recovered,by=c("Province/State","Country/Region","ObservationDate"),all=FALSE)
 colnames(covid)=gsub("/","_",colnames(covid))
 
+rm(confirmed)
+rm(deaths)
+rm(recovered)
+
 covid$Country_Region=as.character(covid$Country_Region)
 covid$Province_State=as.character(covid$Province_State)
 
@@ -50,12 +57,12 @@ covid=merge(covid,pop,by="Country_Region",all=FALSE)
 covid$ObservationDate=as.Date(covid$ObservationDate,format="%m/%d/%Y")
 covid=arrange(covid,ObservationDate)
 
-colors=rainbow(15, alpha = 1, rev = FALSE)
+#colors=rainbow(15, alpha = 1, rev = FALSE)
 
 #aggregate across states/cities for each country
-us.all=subset(covid,Country_Region=="US")
-us=as.data.table(group_by(us.all,ObservationDate, Country_Region) %>% summarise(confirmed = sum(Confirmed),deaths=sum(Deaths),Recovered=sum(Recovered)))
-us$ObservationDate=as.Date(us$ObservationDate)
+# us.all=subset(covid,Country_Region=="US")
+# us=as.data.table(group_by(us.all,ObservationDate, Country_Region) %>% summarise(confirmed = sum(Confirmed),deaths=sum(Deaths),Recovered=sum(Recovered)))
+# us$ObservationDate=as.Date(us$ObservationDate)
 
 covid.agg=as.data.table(group_by(covid,ObservationDate, Country_Region) %>% summarise(confirmed = sum(Confirmed),deaths=sum(Deaths),Recovered=sum(Recovered),Population=max(population)))#aggregate by country/Region
 
@@ -74,8 +81,8 @@ covid.agg$ObservationDate=as.Date(covid.agg$ObservationDate)
 covid.agg=arrange(covid.agg,ObservationDate)
 
 #top countries are those in the top 10% on the most recent date
-covid.agg.top=subset(covid.agg,confirmed>quantile(covid.agg$confirmed[covid.agg$ObservationDate==max(covid.agg$ObservationDate)],seq(0,1,.05))[19])
-top.countries=unique(covid.agg.top$Country_Region)
+top.countries=as.vector(unique(subset(as.data.frame(covid.agg),confirmed>quantile(covid.agg$confirmed[covid.agg$ObservationDate==max(covid.agg$ObservationDate)],seq(0,1,.05))[19])[,c("Country_Region")]))
+
 
 #top countries are those in the top 10% on the most recent date
 # covid.top=subset(covid,Confirmed>quantile(covid$Confirmed[covid$ObservationDate==max(covid$ObservationDate)],seq(0,1,.05))[20])
@@ -85,6 +92,8 @@ top.countries=unique(covid.agg.top$Country_Region)
 colnames(covid.agg)=c("Country_Region","Date","Confirmed Cases","Deaths","Recovered Cases","Population","start","start.c.100","start.d.10","Since 1st Case","Since 100th Case","Since 10th Death")
 
 covid.agg.total=as.data.frame(group_by(covid.agg,Date) %>% summarise(`Confirmed Cases`=sum(`Confirmed Cases`,na.rm=T),Deaths=sum(Deaths,na.rm=T),`Recovered Cases`=sum(`Recovered Cases`,na.rm=T)))
+
+print(mem_used()/1000000000)
 
 #----------------#
 #state level data#
@@ -182,6 +191,8 @@ colnames(state_pop)=gsub("\\.","_",colnames(state_pop))
 covid.kaggle=merge(covid.kaggle,state_pop,by="Province_State",all.x=TRUE)
 covid.kaggle=arrange(covid.kaggle,Date)
 
+print(mem_used()/1000000000)
+
 print('getting covid tracking project data')
 
 #Add data on testing and hospitalizations from covidtracking.com and state population data from Census
@@ -250,7 +261,7 @@ print ("getting NYT data")
 #              ncol=2)
 
 
-
+print(mem_used()/1000000000)
 
 #county-level data from the New York Times
 
@@ -258,7 +269,7 @@ print ("getting NYT data")
 # covid.county=fread("https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv")
 # write.csv(covid.county,'covid_county.csv',row.names = F)
 # } else {
-  #covid.county=fread("covid_county.csv",stringsAsFactors = F)
+  #covid.county=fread("covid_county.csv",stringsAsFactors = F) #HERE
   covid.county=fread("https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv",stringsAsFactors = F)
 # }
 print("Downloaded NYT County-Level Data")
@@ -276,7 +287,7 @@ covid.county$since_start=covid.county$date-covid.county$start.c
 covid.county$since_case_100=covid.county$date-covid.county$start.c.100
 covid.county$since_1st_death=covid.county$date-covid.county$start.d
 
-county_pop=read.csv("county_pop.csv",stringsAsFactors = F)
+county_pop=fread("county_pop.csv",stringsAsFactors = F)
 colnames(county_pop)[c(3,4)]=c("population_2010_census","population")
 covid.county=merge(covid.county,county_pop,by=c("state","county"),all.x=T)
 
@@ -287,3 +298,4 @@ covid.county=arrange(covid.county,Date)
 
 
 
+print(mem_used()/1000000000)

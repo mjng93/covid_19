@@ -2,26 +2,17 @@
 
 #source("covid.r")
 
-library(shiny)
-library(ggplot2)
-library(reshape2)
-library(dplyr)
-library(tidyr)
-library(RColorBrewer)
-library(zoo)
-library(quantmod)
-library(rmarkdown)
-library(TTR)
-library(gridExtra)
-library(grid)
-library(DT)
-library(kableExtra)
-library(tables)
-library(knitr)
-library(rsconnect)
-library(plotly)
-library(ggthemes)
-library(stargazer)
+# library(shiny)
+# library(reshape2)
+# library(tidyr)
+# library(RColorBrewer)
+# library(zoo)
+# library(quantmod)
+# library(knitr)
+# library(rsconnect)
+# library(plotly)
+
+
 
 sandbox4.UI <- function(id) {
   
@@ -45,7 +36,7 @@ sandbox4.UI <- function(id) {
                                  radioButtons(ns("radio"),
                                               label = "Select Data Transformation", 
                                               choices = c("Levels" = "levels", "Log Levels" = "log", "Change (Daily)" = "diff", "Percent Change (Daily)" = "qoq","Average Daily Percent Change (Rolling, 7-days)"="chg.avg","Per Capita"="pc","Per Capita Daily Change"="pc.d","Avg. Per Capita Daily Change (7-day)"="pc.d.avg"), #"Percent Change (10-day)" = "mom"
-                                              selected = "levels"),
+                                              selected = "pc.d.avg"),
                                  
                                  selectInput(ns('xchoice'),
                                              label = 'Select time horizon',

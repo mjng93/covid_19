@@ -2,29 +2,39 @@
 
 #source("covid.r")
 
-library(shiny)
-library(shinydashboard)
+# library(shiny)
+# library(shinydashboard)
+# library(shiny)
+# library(reshape2)
+# library(tidyr)
+# library(RColorBrewer)
+# library(zoo)
+# library(quantmod)
+# library(knitr)
+# library(rsconnect)
+# library(plotly)
 
-library(reshape2)
-library(dplyr)
-library(tidyr)
-library(RColorBrewer)
-library(zoo)
-library(quantmod)
-library(rmarkdown)
-library(TTR)
-library(gridExtra)
-library(grid)
-library(DT)
-library(kableExtra)
-library(tables)
-library(knitr)
-library(rsconnect)
 
-library(ggthemes)
-library(stargazer)
-library(ggplot2)
-library(DT)
+# library(reshape2)
+# library(dplyr)
+# library(tidyr)
+# library(RColorBrewer)
+# library(zoo)
+# library(quantmod)
+# library(rmarkdown)
+# library(TTR)
+# library(gridExtra)
+# library(grid)
+# library(DT)
+# library(kableExtra)
+# library(tables)
+# library(knitr)
+# library(rsconnect)
+# 
+# library(ggthemes)
+# library(stargazer)
+# library(ggplot2)
+# library(DT)
 
 
 
@@ -35,6 +45,7 @@ sandbox5.UI <- function(id) {
   
   ns <- NS(id)
   
+  print(mem_used()/1000000000)
  
  
 div(
@@ -116,6 +127,8 @@ div(
            br(),
            
       
+           
+           
       fluidRow(
         column(6,
                plotlyOutput(ns("countries.log.cases"))),
@@ -237,12 +250,12 @@ div(
         ),
         
         
-        h4("County-Level Data",align="center"),
+        # h4("County-Level Data",align="center"),
+        # 
+        # column(12,plotlyOutput(ns("county.cases.bar"))),
+        #column(12,dataTableOutput(ns("counties.tbl"))),
         
-        column(12,plotlyOutput(ns("county.cases.bar"))),
-        column(12,dataTableOutput(ns("counties.tbl"))),
-        
-        br(),
+        #br(),
         br(),
         
         column(12,
@@ -312,6 +325,8 @@ div(
  
 }
   
+
+print(mem_used()/1000000000)
   
 print('text and tables worked')
 
@@ -325,6 +340,7 @@ print('text and tables worked')
     
     #plots
 
+    print(mem_used()/1000000000)
     
     output$countries.log.cases <- renderPlotly({
       # p2 <- ggplot(data=module_data[module_data$Country_Region %in% top.countries,],aes(x=`Since 100th Case`, y=rollapply(as.numeric(as.vector(Delt(`Confirmed Cases`,k=1)))*100,width=7,FUN=function(x) mean(x,na.rm=T),fill=NA,align='right'), colour =  Country_Region)) + geom_line()  + labs(caption="Source: John Hopkins University.", title ="Confirmed Cases", subtitle = "Log Scale") + xlab("Days Since 100th Case") + ylab("Total Cumulative (Log Points)")   + scale_colour_manual(values = c('black','steelblue3','firebrick','chartreuse3','purple','azure4','green','cadetblue1','chocolate3','darkgoldenrod1','darkgreen','deeppink','blue',"grey","red")) + geom_hline(yintercept = 0) + xlim(0,40) + ylim(4,13)
@@ -343,35 +359,37 @@ print('text and tables worked')
       
     })
     
-    output$countries.cases <- renderPlotly({
-# 
-#     p1<- ggplot(data=module_data[module_data$Country_Region %in% top.countries,],aes(x=`Since 100th Case`, y=`Confirmed Cases`, colour =  Country_Region)) + geom_line()  + labs(caption="Source: John Hopkins University.", title ="Confirmed Cases", subtitle = "Exponential") + xlab("Days Since 100th Case") + ylab("Total Cumulative")   + scale_colour_manual(values = c('black','steelblue3','firebrick','chartreuse3','purple','azure4','green','cadetblue1','chocolate3','darkgoldenrod1','darkgreen','deeppink','blue')) + geom_hline(yintercept = 0)+  xlim(0,40) 
-#     p1
-      
-      plot_ly(as.data.frame(covid.agg)[covid.agg$Country_Region %in% top.countries,], x = ~`Since 100th Case`, y=~`Confirmed Cases`, color =  ~Country_Region, type = 'scatter', mode = 'lines',colors = c("steelblue3","red","chartreuse3","purple","darkgoldenrod2","aquamarine1","forestgreen","dodgerblue4","deeppink","azure4","burlywood4","chocolate1","olivedrab1","gray78","black")) %>%
-        layout(title = "Total Confirmed Cases",
-               xaxis = list(title = "Days Since 100th Case",range=c(0,max(covid.agg$`Since 100th Case`,na.rm = T))),
-               yaxis = list (title = "Total Cumulative",range=c(0,max(covid.agg$`Confirmed Cases`,na.rm = T))))
-      
-    })
+    print(mem_used()/1000000000)
     
-    output$countries.deaths <- renderPlotly({
-  
-      covid.top.deaths=subset(covid,Deaths>quantile(covid$Deaths[covid$ObservationDate==max(covid$ObservationDate)],seq(0,1,.05))[19],na.rm=T)
-      top.countries.deaths=unique(covid.top.deaths$Country_Region)
-      
-      
-      plot_ly(covid.agg[covid.agg$Country_Region %in% top.countries.deaths,], x = ~`Since 10th Death`, y=~Deaths, color =  ~Country_Region, type = 'scatter', mode = 'lines',colors = c("steelblue3","red","chartreuse3","purple","darkgoldenrod2","aquamarine1","forestgreen","dodgerblue4","deeppink","azure4","burlywood4","chocolate1","olivedrab1","gray78","black")) %>%
-        layout(title = "Deaths",
-               xaxis = list(title = "Days Since 10th Death",range=c(0,max(covid.agg$`Since 10th Death`,na.rm = T))),
-               yaxis = list (title = "Total Cumulative",range=c(0,max(covid.agg$`Deaths`,na.rm = T))))
-      
-    })
+#     output$countries.cases <- renderPlotly({
+# # 
+# #     p1<- ggplot(data=module_data[module_data$Country_Region %in% top.countries,],aes(x=`Since 100th Case`, y=`Confirmed Cases`, colour =  Country_Region)) + geom_line()  + labs(caption="Source: John Hopkins University.", title ="Confirmed Cases", subtitle = "Exponential") + xlab("Days Since 100th Case") + ylab("Total Cumulative")   + scale_colour_manual(values = c('black','steelblue3','firebrick','chartreuse3','purple','azure4','green','cadetblue1','chocolate3','darkgoldenrod1','darkgreen','deeppink','blue')) + geom_hline(yintercept = 0)+  xlim(0,40) 
+# #     p1
+#       
+#       plot_ly(as.data.frame(covid.agg)[covid.agg$Country_Region %in% top.countries,], x = ~`Since 100th Case`, y=~`Confirmed Cases`, color =  ~Country_Region, type = 'scatter', mode = 'lines',colors = c("steelblue3","red","chartreuse3","purple","darkgoldenrod2","aquamarine1","forestgreen","dodgerblue4","deeppink","azure4","burlywood4","chocolate1","olivedrab1","gray78","black")) %>%
+#         layout(title = "Total Confirmed Cases",
+#                xaxis = list(title = "Days Since 100th Case",range=c(0,max(covid.agg$`Since 100th Case`,na.rm = T))),
+#                yaxis = list (title = "Total Cumulative",range=c(0,max(covid.agg$`Confirmed Cases`,na.rm = T))))
+#       
+#     })
+    
+    # output$countries.deaths <- renderPlotly({
+    # 
+    #   covid.top.deaths=subset(covid,Deaths>quantile(covid$Deaths[covid$ObservationDate==max(covid$ObservationDate)],seq(0,1,.05))[19],na.rm=T)
+    #   top.countries.deaths=unique(covid.top.deaths$Country_Region)
+    #   
+    #   
+    #   plot_ly(covid.agg[covid.agg$Country_Region %in% top.countries.deaths,], x = ~`Since 10th Death`, y=~Deaths, color =  ~Country_Region, type = 'scatter', mode = 'lines',colors = c("steelblue3","red","chartreuse3","purple","darkgoldenrod2","aquamarine1","forestgreen","dodgerblue4","deeppink","azure4","burlywood4","chocolate1","olivedrab1","gray78","black")) %>%
+    #     layout(title = "Deaths",
+    #            xaxis = list(title = "Days Since 10th Death",range=c(0,max(covid.agg$`Since 10th Death`,na.rm = T))),
+    #            yaxis = list (title = "Total Cumulative",range=c(0,max(covid.agg$`Deaths`,na.rm = T))))
+    # 
+    # })
     
     output$countries.log.deaths <- renderPlotly({
       
-      covid.top.deaths=subset(covid,Deaths>quantile(covid$Deaths[covid$ObservationDate==max(covid$ObservationDate)],seq(0,1,.05))[19],na.rm=T)
-      top.countries.deaths=unique(covid.top.deaths$Country_Region)
+      covid.top.deaths=unique(subset(as.data.frame(covid),Deaths>quantile(covid$Deaths[covid$ObservationDate==max(covid$ObservationDate)],seq(0,1,.05))[19],na.rm=T)[,c("Country_Region")])
+    
       
       covid.agg = as.data.frame(group_by(covid.agg,Country_Region) %>% mutate(deaths.pc.d.7day=rollapply(c(NA,diff((Deaths)/Population,lag=1)),width=7,FUN=function(x) mean(x,na.rm=T),fill=NA,align='right')*100))
       
@@ -381,6 +399,8 @@ print('text and tables worked')
                yaxis = list (title = "Percent (1=1%)"))
       
     })
+    
+    print(mem_used()/1000000000)
     
     output$countries.tbl <- renderDT({
       
@@ -412,11 +432,11 @@ print('text and tables worked')
     covid.kaggle = as.data.frame(group_by(covid.kaggle,Province_State) %>% mutate(deaths.pc.d.7day=rollapply(c(NA,diff(Deaths/Population,lag=1)),width=7,FUN=function(x) mean(x,na.rm=T),fill=NA,align='right')*100,
                                  cases.pc.d.7day=rollapply(c(NA,diff(`Confirmed Cases`/Population,lag=1)),width=7,FUN=function(x) mean(x,na.rm=T),fill=NA,align='right')*100))
     
-    covid.state.top=subset(covid.kaggle,cases.pc.d.7day>quantile(subset(covid.kaggle,Country_Region=="US" & Date==max(covid.kaggle$Date))[,"cases.pc.d.7day"],seq(0,1,.05))[19] & Country_Region=="US")
-    top.states=unique(covid.state.top$Province_State)
+   top.states=unique(subset(as.data.frame(covid.kaggle),cases.pc.d.7day>quantile(subset(covid.kaggle,Country_Region=="US" & Date==max(covid.kaggle$Date))[,"cases.pc.d.7day"],seq(0,1,.05))[19] & Country_Region=="US")[,"Province_State"])
+   
     
-    covid.state.top.deaths=subset(covid.kaggle,deaths.pc.d.7day>quantile(subset(covid.kaggle,Country_Region=="US" & Date==max(covid.kaggle$Date))[,"deaths.pc.d.7day"],seq(0,1,.05))[19] & Country_Region=="US")
-    top.states.deaths=unique(covid.state.top.deaths$Province_State)
+    top.states.deaths=unique(subset(as.data.frame(covid.kaggle),deaths.pc.d.7day>quantile(subset(covid.kaggle,Country_Region=="US" & Date==max(covid.kaggle$Date))[,"deaths.pc.d.7day"],seq(0,1,.05))[19] & Country_Region=="US")[,"Province_State"])
+    
     
     output$states.log.cases <- renderPlotly({
      
@@ -429,24 +449,26 @@ print('text and tables worked')
       
     })
     
-    output$states.cases <- renderPlotly({
-     
-      plot_ly(as.data.frame(covid.kaggle)[covid.kaggle$Province_State %in% top.states,], x = ~`Since 100th Case`, y=~`Confirmed Cases`, color =  ~Province_State, type = 'scatter', mode = 'lines',colors = c("steelblue3","red","chartreuse3","purple","darkgoldenrod2","aquamarine1","forestgreen","dodgerblue4","deeppink","azure4","burlywood4","chocolate1","olivedrab1","gray78","black")) %>%
-        layout(title = "Total Confirmed Cases by State",
-               xaxis = list(title = "Days Since 100th Case",range=c(0,max(covid.kaggle$`Since 100th Case`,na.rm = T))),
-               yaxis = list (title = "Total Cumulative",range=c(0,max(covid.kaggle[covid.kaggle$state_ab!="US (Total)","Confirmed Cases"],na.rm = T))))
-      
-    })
+    print(mem_used()/1000000000)
     
-    output$states.deaths <- renderPlotly({
-      
-      
-      plot_ly(as.data.frame(covid.kaggle)[covid.kaggle$Province_State %in% top.states,], x = ~`Since 10th Death`, y=~Deaths, color =  ~Province_State, type = 'scatter', mode = 'lines',colors = c("steelblue3","red","chartreuse3","purple","darkgoldenrod2","aquamarine1","forestgreen","dodgerblue4","deeppink","azure4","burlywood4","chocolate1","olivedrab1","gray78","black")) %>%
-        layout(title = "Deaths by State",
-               xaxis = list(title = "Days Since 10th Death"),
-               yaxis = list (title = "Total Cumulative",range=c(0,max(covid.kaggle[covid.kaggle$state_ab!="US (Total)","Deaths"],na.rm = T))))
-      
-    })
+    # output$states.cases <- renderPlotly({
+    #  
+    #   plot_ly(as.data.frame(covid.kaggle)[covid.kaggle$Province_State %in% top.states,], x = ~`Since 100th Case`, y=~`Confirmed Cases`, color =  ~Province_State, type = 'scatter', mode = 'lines',colors = c("steelblue3","red","chartreuse3","purple","darkgoldenrod2","aquamarine1","forestgreen","dodgerblue4","deeppink","azure4","burlywood4","chocolate1","olivedrab1","gray78","black")) %>%
+    #     layout(title = "Total Confirmed Cases by State",
+    #            xaxis = list(title = "Days Since 100th Case",range=c(0,max(covid.kaggle$`Since 100th Case`,na.rm = T))),
+    #            yaxis = list (title = "Total Cumulative",range=c(0,max(covid.kaggle[covid.kaggle$state_ab!="US (Total)","Confirmed Cases"],na.rm = T))))
+    #   
+    # })
+    
+    # output$states.deaths <- renderPlotly({
+    #   
+    #   
+    #   plot_ly(as.data.frame(covid.kaggle)[covid.kaggle$Province_State %in% top.states,], x = ~`Since 10th Death`, y=~Deaths, color =  ~Province_State, type = 'scatter', mode = 'lines',colors = c("steelblue3","red","chartreuse3","purple","darkgoldenrod2","aquamarine1","forestgreen","dodgerblue4","deeppink","azure4","burlywood4","chocolate1","olivedrab1","gray78","black")) %>%
+    #     layout(title = "Deaths by State",
+    #            xaxis = list(title = "Days Since 10th Death"),
+    #            yaxis = list (title = "Total Cumulative",range=c(0,max(covid.kaggle[covid.kaggle$state_ab!="US (Total)","Deaths"],na.rm = T))))
+    #   
+    # })
     
     output$states.log.deaths <- renderPlotly({
       
@@ -457,6 +479,8 @@ print('text and tables worked')
                yaxis = list (title = "Percent (1=1%)"))
       
     })
+    
+    print(mem_used()/1000000000)
     
     output$states.tbl <- renderDT({
       
@@ -488,38 +512,37 @@ print('text and tables worked')
     options = list(dom = 'ft'),rownames=FALSE)
     
     
-    covid.county.top=arrange(covid.county,Date)
-    covid.county.top=as.data.frame(group_by(covid.county.top,county.state) %>% mutate(count=length(Cases)))
-    covid.county.top=subset(covid.county.top,count>7)
-    covid.county.top=as.data.frame(group_by(covid.county.top,county.state) %>% mutate(`Change in Cases`=c(NA,diff(Cases,lag=1)) ,
-                                                                               `% Change in Cases`=round(as.numeric(as.vector(Delt(Cases,k=1)))*100,2),
-                                                                               `1-Week Change in Cases`=c(rep(NA,7),diff(Cases,lag=7)) ,
-                                                                               `1-Week % Change in Cases`=round(as.numeric(as.vector(Delt(Cases,k=7)))*100,2),
-                                                                               `Change in Deaths`=c(NA,diff(`Deaths`,lag=1)) ,
-                                                                               `% Change in Deaths`=round(as.numeric(as.vector(Delt(`Deaths`,k=1)))*100,2),
-                                                                               `1-Week Change in Deaths`=c(rep(NA,7),diff(`Deaths`,lag=7)) ,
-                                                                               `1-Week % Change in Deaths`=round(as.numeric(as.vector(Delt(`Deaths`,k=7)))*100,2)
-    ))
+    # covid.county.top=arrange(covid.county,Date)
+    # covid.county.top=as.data.frame(group_by(covid.county.top,county.state) %>% mutate(count=length(Cases)))
+    # covid.county.top=subset(covid.county.top,count>7)
+    # covid.county.top=as.data.frame(group_by(covid.county.top,county.state) %>% mutate(`Change in Cases`=c(NA,diff(Cases,lag=1)) ,
+    #                                                                            `% Change in Cases`=round(as.numeric(as.vector(Delt(Cases,k=1)))*100,2),
+    #                                                                            `1-Week Change in Cases`=c(rep(NA,7),diff(Cases,lag=7)) ,
+    #                                                                            `1-Week % Change in Cases`=round(as.numeric(as.vector(Delt(Cases,k=7)))*100,2),
+    #                                                                            `Change in Deaths`=c(NA,diff(`Deaths`,lag=1)) ,
+    #                                                                            `% Change in Deaths`=round(as.numeric(as.vector(Delt(`Deaths`,k=1)))*100,2),
+    #                                                                            `1-Week Change in Deaths`=c(rep(NA,7),diff(`Deaths`,lag=7)) ,
+    #                                                                            `1-Week % Change in Deaths`=round(as.numeric(as.vector(Delt(`Deaths`,k=7)))*100,2)
+    # ))
+    # 
+    # 
+    # 
+    # top.county.weekly.cases=unique(subset(as.data.frame(covid.county.top),`1-Week Change in Cases`>=quantile(covid.county.top$`1-Week Change in Cases`[covid.county.top$Date==max(covid.county.top$Date,na.rm=T)],seq(0,1,.01),na.rm=T)[100])[,c("county.state")])
+    # 
+    # covid.county.top=arrange(arrange(covid.county.top,Date),-`1-Week % Change in Cases`)
+    # 
+    # output$county.cases.bar <- renderPlotly({
+    #   
+    #   covid.county.top=arrange(covid.county.top[covid.county.top$county.state %in% top.county.weekly.cases & covid.county.top$Date==max(covid.county.top$Date,na.rm=T),],-`1-Week Change in Cases`)
+    #   
+    #   plot_ly(covid.county.top, x = ~`1-Week Change in Cases`, y=~reorder(county.state,`1-Week Change in Cases`),  type = 'bar') %>%
+    #     layout(title = "Fastest Growing Counties (Weekly Change in Cases)",
+    #            xaxis = list(title = paste0("1-week change in cases: ",paste(format(max(covid.county.top$Date,na.rm=T)-7,"%b %d"),format(max(covid.county.top$Date,na.rm=T),"%b %d"),sep=" - "))),
+    #            yaxis = list (title = "County"))
+    #   
+    # })
     
-    
-    covid.county.new.cases=subset(covid.county.top,`1-Week Change in Cases`>=quantile(covid.county.top$`1-Week Change in Cases`[covid.county.top$Date==max(covid.county.top$Date,na.rm=T)],seq(0,1,.01),na.rm=T)[100])
-    top.county.weekly.cases=unique(covid.county.new.cases$county.state)
-    
-    
-    covid.county.top=arrange(arrange(covid.county.top,Date),-`1-Week % Change in Cases`)
-    
-    output$county.cases.bar <- renderPlotly({
-      
-      plot.data=arrange(covid.county.top[covid.county.top$county.state %in% top.county.weekly.cases & covid.county.top$Date==max(covid.county.top$Date,na.rm=T),],-`1-Week Change in Cases`)
-      
-      plot_ly(plot.data, x = ~`1-Week Change in Cases`, y=~reorder(county.state,`1-Week Change in Cases`),  type = 'bar') %>%
-        layout(title = "Fastest Growing Counties (Weekly Change in Cases)",
-               xaxis = list(title = paste0("1-week change in cases: ",paste(format(max(covid.county.top$Date,na.rm=T)-7,"%b %d"),format(max(covid.county.top$Date,na.rm=T),"%b %d"),sep=" - "))),
-               yaxis = list (title = "County"))
-      
-    })
-    
-    
+    print(mem_used()/1000000000)
     
   }
                   
